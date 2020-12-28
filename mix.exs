@@ -1,12 +1,12 @@
-defmodule PCA9685.MixProject do
+defmodule ServoKit.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/mnishiguchi/pca9685"
+  @source_url "https://github.com/mnishiguchi/servo_kit"
   @version "0.0.1"
 
   def project do
     [
-      app: :pca9685,
+      app: :servo_kit,
       version: @version,
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -24,7 +24,7 @@ defmodule PCA9685.MixProject do
   def application do
     [
       extra_applications: [:logger]
-      # mod: {PCA9685.Application, []}
+      # mod: {ServoKit.Application, []}
     ]
   end
 
@@ -53,7 +53,7 @@ defmodule PCA9685.MixProject do
 
   defp package() do
     [
-      name: "pca9685",
+      name: "servo_kit",
       files: [
         "lib",
         "mix.exs",

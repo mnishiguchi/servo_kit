@@ -1,4 +1,4 @@
-defmodule PCA9685.Driver do
+defmodule ServoKit.PCA9685 do
   @moduledoc """
   Controls the PCA9685 PWM Servo Driver from Elixir.
   See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf)
@@ -67,29 +67,28 @@ defmodule PCA9685.Driver do
   @doc """
   Initialize the PCA9685.
 
-      iex> {:ok, state} = PCA9685.Driver.start(%{i2c_bus_name: "i2c-1"})
+      iex> {:ok, state} = ServoKit.PCA9685.start(%{i2c_bus_name: "i2c-1"})
   """
   def start(config \\ %{}) do
     %{i2c_bus_name: i2c_bus_name, frequency: frequency} = Enum.into(config, @default_config)
     {:ok, i2c_ref} = Circuits.I2C.open(i2c_bus_name)
-    state = %PCA9685.Driver.State{i2c_ref: i2c_ref} |> set_pwm_frequency(frequency)
+    state = %ServoKit.PCA9685.State{i2c_ref: i2c_ref} |> set_pwm_frequency(frequency)
     {:ok, state}
   end
 
   @doc """
   Performs the software reset. See Datasheet 7.1.4 and 7.6.
 
-      iex> PCA9685.Driver.reset(state)
+      iex> ServoKit.PCA9685.reset(state)
   """
   def reset(%{i2c_ref: i2c_ref} = state) do
-    :ok = Circuits.I2C.write(i2c_ref, @general_call_address, <<@software_reset>>)
-    state
+    with :ok <- Circuits.I2C.write(i2c_ref, @general_call_address, <<@software_reset>>), do: state
   end
 
   @doc """
   Puts board into sleep mode.
 
-      iex> PCA9685.Driver.sleep(state)
+      iex> ServoKit.PCA9685.sleep(state)
   """
   def sleep(state) do
     state |> assign_mode1(@mode1_sleep, true) |> write_mode1() |> delay(5)
@@ -98,7 +97,7 @@ defmodule PCA9685.Driver do
   @doc """
   Wakes board from sleep.
 
-      iex> PCA9685.Driver.wake_up(state)
+      iex> ServoKit.PCA9685.wake_up(state)
   """
   def wake_up(state) do
     state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
@@ -107,8 +106,7 @@ defmodule PCA9685.Driver do
   @doc """
   Set the PWM frequency to the provided value in hertz.
 
-      iex> PCA9685.Driver.set_pwm_frequency(state, 50)
-
+      iex> ServoKit.PCA9685.set_pwm_frequency(state, 50)
   """
   def set_pwm_frequency(state, freq_hz) when is_integer(freq_hz) do
     freq_hz = valid_frequency(freq_hz)
@@ -139,8 +137,8 @@ defmodule PCA9685.Driver do
   @doc """
   Sets a single PWM channel or all PWM channels by specifying the duty cycle in percent.
 
-      iex> PCA9685.Driver.set_pwm_duty_cycle(state, 0, 50.0)
-      iex> PCA9685.Driver.set_pwm_duty_cycle(state, :all, 50.0)
+      iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, 0, 50.0)
+      iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, :all, 50.0)
   """
   def set_pwm_duty_cycle(state, ch, percent) when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
     pulse_width = pulse_width_from_percent(percent)
@@ -152,8 +150,8 @@ defmodule PCA9685.Driver do
   Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
   These values must be between 0 and 4095.
 
-      iex> PCA9685.Driver.set_pwm(state, 0, {0, 2000})
-      iex> PCA9685.Driver.set_pwm(state, :all, {0, 2000})
+      iex> ServoKit.PCA9685.set_pwm(state, 0, {0, 2000})
+      iex> ServoKit.PCA9685.set_pwm(state, :all, {0, 2000})
   """
   def set_pwm(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
@@ -186,6 +184,10 @@ defmodule PCA9685.Driver do
     state |> assign_prescale(prescale) |> write_prescale()
   end
 
+  defp delay(state, milliseconds) do
+    with :ok <- Process.sleep(milliseconds), do: state
+  end
+
   ##
   ## Assigners for the state fields in memory
   ##
@@ -210,15 +212,9 @@ defmodule PCA9685.Driver do
 
   defp i2c_write(state, register, data) when register in 0..255 and data in 0..255 do
     %{i2c_ref: i2c_ref, pca9685_address: pca9685_address} = state
-    Logger.debug("Wrote #{hex(data)} to register #{hex(register)} at address #{hex(pca9685_address)}")
+    hex = fn val -> inspect(val, base: :hex) end
+    Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(pca9685_address)}")
     :ok = Circuits.I2C.write(i2c_ref, pca9685_address, <<register, data>>)
     state
   end
-
-  defp delay(state, milliseconds) do
-    Process.sleep(milliseconds)
-    state
-  end
-
-  defp hex(val), do: inspect(val, base: :hex)
 end

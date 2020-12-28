@@ -1,4 +1,4 @@
-defmodule PCA9685 do
+defmodule ServoKit do
   @moduledoc false
 
   @doc """
@@ -6,7 +6,7 @@ defmodule PCA9685 do
 
   ## Examples
 
-      iex> PCA9685.hello()
+      iex> ServoKit.hello()
       :world
 
   """

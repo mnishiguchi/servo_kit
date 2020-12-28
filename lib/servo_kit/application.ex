@@ -1,4 +1,4 @@
-defmodule PCA9685.Application do
+defmodule ServoKit.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
