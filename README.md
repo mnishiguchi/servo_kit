@@ -1,5 +1,7 @@
 # PCA9685
 
+![CI](https://github.com/mnishiguchi/pca9685/workflows/CI/badge.svg)
+
 Drive PCA9685 PWM/Servo Controller using Elixir
 
 ## Installation

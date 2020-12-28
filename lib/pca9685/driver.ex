@@ -11,7 +11,7 @@ defmodule PCA9685.Driver do
 
   # REGISTER ADDRESSES
   @pca9685_mode1 0x00
-  @pca9685_mode2 0x01
+  # @pca9685_mode2 0x01
   @pca9685_led0_on_l 0x06
   @pca9685_led0_on_h 0x07
   @pca9685_led0_off_l 0x08
