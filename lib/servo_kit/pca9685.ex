@@ -5,6 +5,8 @@ defmodule ServoKit.PCA9685 do
   """
   use Bitwise
   require Logger
+  import ServoKit.PCA9685.Util
+  alias ServoKit.I2C, as: SerialBus
 
   @general_call_address 0x00
   @software_reset 0x06
@@ -39,17 +41,6 @@ defmodule ServoKit.PCA9685 do
   # @mode2_och 0x08
   # @mode2_invrt 0x10
 
-  @pca9685_prescale_min 3
-  @pca9685_prescale_max 255
-
-  # The frequency limit is: 3052 = 50MHz / (4 * 4096)
-  # See Datasheet 7.3.5 PWM frequency PRESCALE
-  @pca9685_frequency_min 1
-  @pca9685_frequency_max 3050
-
-  # The frequency the PCA9685 should use for frequency calculations.
-  @oscillator_freq 25_000_000
-
   @default_config %{
     i2c_bus_name: "i2c-1",
     frequency: 50
@@ -60,7 +51,8 @@ defmodule ServoKit.PCA9685 do
       i2c_ref: nil,
       pca9685_address: 0x40,
       mode1: 0x11,
-      mode2: 0x04
+      mode2: 0x04,
+      prescale: -1
     )
   end
 
@@ -71,7 +63,7 @@ defmodule ServoKit.PCA9685 do
   """
   def start(config \\ %{}) do
     %{i2c_bus_name: i2c_bus_name, frequency: frequency} = Enum.into(config, @default_config)
-    {:ok, i2c_ref} = Circuits.I2C.open(i2c_bus_name)
+    {:ok, i2c_ref} = SerialBus.open(i2c_bus_name)
     state = %ServoKit.PCA9685.State{i2c_ref: i2c_ref} |> set_pwm_frequency(frequency)
     {:ok, state}
   end
@@ -82,7 +74,7 @@ defmodule ServoKit.PCA9685 do
       iex> ServoKit.PCA9685.reset(state)
   """
   def reset(%{i2c_ref: i2c_ref} = state) do
-    with :ok <- Circuits.I2C.write(i2c_ref, @general_call_address, <<@software_reset>>), do: state
+    with :ok <- SerialBus.write(i2c_ref, @general_call_address, <<@software_reset>>), do: state
   end
 
   @doc """
@@ -109,8 +101,7 @@ defmodule ServoKit.PCA9685 do
       iex> ServoKit.PCA9685.set_pwm_frequency(state, 50)
   """
   def set_pwm_frequency(state, freq_hz) when is_integer(freq_hz) do
-    freq_hz = valid_frequency(freq_hz)
-    prescale = round(@oscillator_freq / (freq_hz * 4096.0) + 0.5 - 1) |> valid_prescale
+    prescale = prescale_value_from_frequecy(freq_hz)
     Logger.debug("frequency: #{freq_hz}, prescale: #{prescale}")
 
     state
@@ -127,13 +118,6 @@ defmodule ServoKit.PCA9685 do
     |> write_mode1()
   end
 
-  defp valid_frequency(freq_hz) when freq_hz < @pca9685_frequency_min, do: @pca9685_frequency_min
-  defp valid_frequency(freq_hz) when freq_hz > @pca9685_frequency_max, do: @pca9685_frequency_max
-  defp valid_frequency(freq_hz), do: freq_hz
-  defp valid_prescale(val) when val < @pca9685_prescale_min, do: @pca9685_prescale_min
-  defp valid_prescale(val) when val > @pca9685_prescale_max, do: @pca9685_prescale_max
-  defp valid_prescale(val), do: val
-
   @doc """
   Sets a single PWM channel or all PWM channels by specifying the duty cycle in percent.
 
@@ -141,9 +125,15 @@ defmodule ServoKit.PCA9685 do
       iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, :all, 50.0)
   """
   def set_pwm_duty_cycle(state, ch, percent) when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
-    pulse_width = pulse_width_from_percent(percent)
-    Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)}")
+    pulse_width = pulse_range_from_percent(percent)
+    Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for ch#{ch}")
     set_pwm(state, ch, pulse_width)
+  end
+
+  def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
+    pulse_width = pulse_range_from_percent(percent)
+    Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
+    set_pwm(state, :all, pulse_width)
   end
 
   @doc """
@@ -175,11 +165,6 @@ defmodule ServoKit.PCA9685 do
     |> i2c_write(@pca9685_all_led_off_h, off_h_byte)
   end
 
-  @spec pulse_width_from_percent(float()) :: {0, 0..0xFFF}
-  defp pulse_width_from_percent(percent) when percent >= 0.0 and percent <= 100.0 do
-    {0, round(4095.0 * percent / 100)}
-  end
-
   defp update_prescale(state, prescale) do
     state |> assign_prescale(prescale) |> write_prescale()
   end
@@ -189,7 +174,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   ##
-  ## Assigners for the state fields in memory
+  ## Assigners for the state in memory
   ##
 
   defp assign_mode1(state, flag, enabled), do: assign_mode(state, :mode1, flag, enabled)
@@ -203,7 +188,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   ##
-  ## Writers that send value to the PCA9685.
+  ## Writers that send data to the PCA9685 device
   ##
 
   defp write_mode1(%{mode1: mode1} = state), do: i2c_write(state, @pca9685_mode1, mode1)
@@ -214,7 +199,7 @@ defmodule ServoKit.PCA9685 do
     %{i2c_ref: i2c_ref, pca9685_address: pca9685_address} = state
     hex = fn val -> inspect(val, base: :hex) end
     Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(pca9685_address)}")
-    :ok = Circuits.I2C.write(i2c_ref, pca9685_address, <<register, data>>)
+    :ok = SerialBus.write(i2c_ref, pca9685_address, <<register, data>>)
     state
   end
 end
