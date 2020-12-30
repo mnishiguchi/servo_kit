@@ -51,39 +51,55 @@ defmodule ServoKit.PCA9685Test do
       assert %PCA9685.State{prescale: 101} = PCA9685.set_pwm_frequency(state, 60)
       assert %PCA9685.State{prescale: 86} = PCA9685.set_pwm_frequency(state, 70)
     end
-
-    test "large frequency uses min prescale" do
-      {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{prescale: 3} = PCA9685.set_pwm_frequency(state, 2000)
-    end
-
-    test "small frequency uses max prescale" do
-      {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{prescale: 255} = PCA9685.set_pwm_frequency(state, 1)
-    end
   end
 
   describe "set_pwm_duty_cycle" do
     test "one channel" do
       {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{} = PCA9685.set_pwm_duty_cycle(state, 0, 60.0)
+      state = PCA9685.set_pwm_duty_cycle(state, 1, 60.0)
+
+      assert [
+               nil,
+               60.0,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil,
+               nil
+             ] == state.duty_cycles
     end
 
     test "all channels" do
       {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{} = PCA9685.set_pwm_duty_cycle(state, :all, 60.0)
-    end
-  end
+      state = PCA9685.set_pwm_duty_cycle(state, :all, 60.0)
 
-  describe "set_pwm" do
-    test "one channel" do
-      {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{} = PCA9685.set_pwm(state, 0, {0, 2000})
-    end
-
-    test "all channels" do
-      {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{} = PCA9685.set_pwm(state, :all, {0, 2000})
+      assert [
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0,
+               60.0
+             ] == state.duty_cycles
     end
   end
 

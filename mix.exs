@@ -63,7 +63,9 @@ defmodule ServoKit.MixProject do
       licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url,
-        "PCA9685 Datasheet" => "https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf"
+        "PCA9685 Datasheet" => "https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf",
+        "PCA9685 Overview" =>
+          "https://www.nxp.com/products/power-management/lighting-driver-and-controller-ics/ic-led-controllers/16-channel-12-bit-pwm-fm-plus-ic-bus-led-controller:PCA9685"
       }
     ]
   end
