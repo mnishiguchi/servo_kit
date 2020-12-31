@@ -85,7 +85,8 @@ defmodule ServoKit.PCA9685 do
   end
 
   @doc """
-  Performs the software reset. See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf) 7.1.4 and 7.6.
+  Performs the software reset.
+  See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf) 7.1.4 and 7.6.
 
   ## Examples
 
@@ -97,7 +98,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   @doc """
-  Puts board into sleep mode.
+  Puts the board into the sleep mode.
 
   ## Examples
 
@@ -108,7 +109,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   @doc """
-  Wakes board from sleep.
+  Wakes the board from the sleep mode.
 
   ## Examples
 
@@ -119,7 +120,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   @doc """
-  Set the PWM frequency to the provided value in hertz.
+  Sets the PWM frequency to the provided value in hertz. The PWM frequency is shared by all the channels.
 
   ## Examples
 
@@ -170,7 +171,8 @@ defmodule ServoKit.PCA9685 do
     |> write_pulse_range(:all, pulse_width)
   end
 
-  def update_mode1(state, flags) when is_list(flags) do
+  # See [Datasheet 7.3.1](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).
+  defp update_mode1(state, flags) when is_list(flags) do
     Enum.reduce(flags, state, fn {flag, enabled}, state -> assign_mode1(state, flag, enabled) end)
     |> write_mode1()
   end
@@ -180,7 +182,7 @@ defmodule ServoKit.PCA9685 do
   #   |> write_mode1()
   # end
 
-  def update_prescale(state, prescale) do
+  defp update_prescale(state, prescale) do
     state |> assign_prescale(prescale) |> write_prescale()
   end
 
