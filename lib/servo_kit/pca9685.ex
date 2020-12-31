@@ -48,7 +48,7 @@ defmodule ServoKit.PCA9685 do
 
   defmodule State do
     @moduledoc """
-    The servo state to be passed around when we control a servo.
+    The servo state to be passed around when we control a servo. It is primarily for keeping config and
     """
     defstruct(
       i2c_ref: nil,
@@ -67,7 +67,6 @@ defmodule ServoKit.PCA9685 do
 
   iex> {:ok, state} = ServoKit.PCA9685.start(%{i2c_bus: "i2c-1"})
   """
-  @spec start(map() | nil) :: {:ok, ServoKit.PCA9685.State.t()}
   def start(config \\ %{}) do
     {:ok, i2c_ref} = SerialBus.open(config[:i2c_bus] || @default_i2c_bus)
     pca9685_address = config[:pca9685_address] || @default_pca9685_address
@@ -92,7 +91,6 @@ defmodule ServoKit.PCA9685 do
 
       iex> ServoKit.PCA9685.reset(state)
   """
-  @spec reset(map()) :: ServoKit.PCA9685.State.t()
   def reset(%{i2c_ref: i2c_ref} = state) do
     :ok = SerialBus.write(i2c_ref, @general_call_address, <<@software_reset>>)
     state
@@ -105,7 +103,6 @@ defmodule ServoKit.PCA9685 do
 
       iex> ServoKit.PCA9685.sleep(state)
   """
-  @spec sleep(map()) :: ServoKit.PCA9685.State.t()
   def sleep(state) do
     state |> assign_mode1(@mode1_sleep, true) |> write_mode1() |> delay(5)
   end
@@ -117,7 +114,6 @@ defmodule ServoKit.PCA9685 do
 
       iex> ServoKit.PCA9685.wake_up(state)
   """
-  @spec wake_up(map()) :: ServoKit.PCA9685.State.t()
   def wake_up(state) do
     state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
   end
@@ -129,7 +125,6 @@ defmodule ServoKit.PCA9685 do
 
       iex> ServoKit.PCA9685.set_pwm_frequency(state, 50)
   """
-  @spec set_pwm_frequency(map(), pos_integer()) :: ServoKit.PCA9685.State.t()
   def set_pwm_frequency(%{reference_clock_speed: reference_clock_speed} = state, freq_hz) when is_integer(freq_hz) do
     prescale = prescale_from_frequecy(freq_hz, reference_clock_speed)
     Logger.debug("Set frequency to #{freq_hz}Hz (prescale: #{prescale})")
@@ -158,7 +153,6 @@ defmodule ServoKit.PCA9685 do
       iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, 0, 50.0)
       iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, :all, 50.0)
   """
-  @spec set_pwm_duty_cycle(%{duty_cycles: list(nil | float())}, :all | byte(), float()) :: ServoKit.PCA9685.State.t()
   def set_pwm_duty_cycle(%{duty_cycles: duty_cycles} = state, ch, percent)
       when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
     pulse_width = pulse_range_from_duty_cycle(percent)
@@ -176,7 +170,6 @@ defmodule ServoKit.PCA9685 do
     |> write_pulse_range(:all, pulse_width)
   end
 
-  @spec update_mode1(map(), list({atom(), boolean()})) :: %ServoKit.PCA9685.State{}
   def update_mode1(state, flags) when is_list(flags) do
     Enum.reduce(flags, state, fn {flag, enabled}, state -> assign_mode1(state, flag, enabled) end)
     |> write_mode1()
@@ -187,7 +180,6 @@ defmodule ServoKit.PCA9685 do
   #   |> write_mode1()
   # end
 
-  @spec update_prescale(map(), pos_integer()) :: %ServoKit.PCA9685.State{}
   def update_prescale(state, prescale) do
     state |> assign_prescale(prescale) |> write_prescale()
   end
@@ -214,7 +206,7 @@ defmodule ServoKit.PCA9685 do
 
   # Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
   # These values must be between 0 and 4095.
-  @spec write_pulse_range(map(), :all | byte, {char, char}) :: %ServoKit.PCA9685.State{}
+  # @spec write_pulse_range(ServoKit.PCA9685.State.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685.State{}
   defp write_pulse_range(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
     <<off_h_byte::4, off_l_byte::8>> = <<until::size(12)>>

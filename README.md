@@ -11,7 +11,7 @@ You can install this library by adding `servo_kit` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:servo_kit, "~> 0.0.2"}
+    {:servo_kit, "~> 0.0.3"}
   ]
 end
 ```
