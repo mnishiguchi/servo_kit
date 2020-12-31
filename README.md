@@ -1,5 +1,7 @@
 # ServoKit
 
+[![Hex.pm](https://img.shields.io/hexpm/v/servo_kit.svg)](https://hex.pm/packages/servo_kit)
+[![API docs](https://img.shields.io/hexpm/v/servo_kit.svg?label=hexdocs)](https://hexdocs.pm/servo_kit)
 ![CI](https://github.com/mnishiguchi/pca9685/workflows/CI/badge.svg)
 
 Drive PCA9685 PWM/Servo Controller using Elixir
