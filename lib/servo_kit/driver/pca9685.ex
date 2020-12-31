@@ -48,38 +48,30 @@ defmodule ServoKit.PCA9685 do
   @default_reference_clock_speed 25_000_000
   @default_frequency 50
 
-  defmodule State do
-    @moduledoc """
-    The servo state to be passed around when we control a servo. It is primarily for keeping config and
-    """
-    defstruct(
-      i2c_ref: nil,
-      pca9685_address: nil,
-      reference_clock_speed: nil,
-      mode1: 0x11,
-      mode2: 0x04,
-      prescale: -1,
-      # Duty cycles per channel.
-      duty_cycles: List.duplicate(nil, 16)
-    )
-  end
+  defstruct(
+    i2c_ref: nil,
+    pca9685_address: nil,
+    reference_clock_speed: nil,
+    mode1: 0x11,
+    mode2: 0x04,
+    prescale: -1,
+    # Duty cycles per channel.
+    duty_cycles: List.duplicate(0, 16)
+  )
 
   @impl true
-  def start(config \\ %{}) do
+  def new(config \\ %{}) do
     {:ok, i2c_ref} = SerialBus.open(config[:i2c_bus] || @default_i2c_bus)
     pca9685_address = config[:pca9685_address] || @default_pca9685_address
     reference_clock_speed = config[:reference_clock_speed] || @default_reference_clock_speed
     frequency = config[:frequency] || @default_frequency
 
-    state =
-      %ServoKit.PCA9685.State{
-        i2c_ref: i2c_ref,
-        pca9685_address: pca9685_address,
-        reference_clock_speed: reference_clock_speed
-      }
-      |> set_pwm_frequency(frequency)
-
-    {:ok, state}
+    %ServoKit.PCA9685{
+      i2c_ref: i2c_ref,
+      pca9685_address: pca9685_address,
+      reference_clock_speed: reference_clock_speed
+    }
+    |> set_pwm_frequency(frequency)
   end
 
   @impl true
@@ -109,6 +101,7 @@ defmodule ServoKit.PCA9685 do
     pulse_width = pulse_range_from_duty_cycle(percent)
     Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
     # Keep record in memory and write to the device.
+
     %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
     |> write_pulse_range(ch, pulse_width)
   end
@@ -117,6 +110,7 @@ defmodule ServoKit.PCA9685 do
     pulse_width = pulse_range_from_duty_cycle(percent)
     Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
     # Keep record in memory and write to the device.
+
     %{state | duty_cycles: List.duplicate(percent, 16)}
     |> write_pulse_range(:all, pulse_width)
   end
@@ -193,7 +187,7 @@ defmodule ServoKit.PCA9685 do
 
   # Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
   # These values must be between 0 and 4095.
-  # @spec write_pulse_range(ServoKit.PCA9685.State.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685.State{}
+  # @spec write_pulse_range(ServoKit.PCA9685.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685{}
   defp write_pulse_range(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
     <<off_h_byte::4, off_l_byte::8>> = <<until::size(12)>>

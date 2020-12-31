@@ -8,7 +8,7 @@ defmodule ServoKit.Application do
   require Logger
 
   @impl true
-  def start(_type, _args) do
+  def new(_type, _args) do
     Logger.debug("#{__MODULE__} starting")
 
     children = []

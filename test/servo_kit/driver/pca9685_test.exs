@@ -17,69 +17,68 @@ defmodule ServoKit.PCA9685Test do
 
   describe "start" do
     test "no config" do
-      assert {:ok, state} = PCA9685.start()
-      assert %PCA9685.State{i2c_ref: _ref, mode1: 0xA1, mode2: 0x04, pca9685_address: 0x40, prescale: 121} = state
+      assert %PCA9685{i2c_ref: _ref, mode1: 0xA1, mode2: 0x04, pca9685_address: 0x40, prescale: 121} = PCA9685.new()
     end
 
     test "blank config" do
-      assert {:ok, _} = PCA9685.start(%{})
+      assert _state = PCA9685.new(%{})
     end
 
     test "some config" do
-      assert {:ok, _} = PCA9685.start(%{i2c_bus_name: "i2c-1"})
+      assert _state = PCA9685.new(%{i2c_bus_name: "i2c-1"})
     end
   end
 
   test "reset" do
-    {:ok, state} = PCA9685.start(%{})
-    assert %PCA9685.State{} = PCA9685.reset(state)
+    state = PCA9685.new(%{})
+    assert %PCA9685{} = PCA9685.reset(state)
   end
 
   test "sleep" do
-    {:ok, state} = PCA9685.start(%{})
-    assert %PCA9685.State{mode1: 0xB1} = PCA9685.sleep(state)
+    state = PCA9685.new(%{})
+    assert %PCA9685{mode1: 0xB1} = PCA9685.sleep(state)
   end
 
   test "wake_up" do
-    {:ok, state} = PCA9685.start(%{})
-    assert %PCA9685.State{mode1: 0xA1} = PCA9685.wake_up(state)
+    state = PCA9685.new(%{})
+    assert %PCA9685{mode1: 0xA1} = PCA9685.wake_up(state)
   end
 
   describe "set_pwm_frequency" do
     test "calculate prescale" do
-      {:ok, state} = PCA9685.start(%{})
-      assert %PCA9685.State{prescale: 101} = PCA9685.set_pwm_frequency(state, 60)
-      assert %PCA9685.State{prescale: 86} = PCA9685.set_pwm_frequency(state, 70)
+      state = PCA9685.new(%{})
+      assert %PCA9685{prescale: 101} = PCA9685.set_pwm_frequency(state, 60)
+      assert %PCA9685{prescale: 86} = PCA9685.set_pwm_frequency(state, 70)
     end
   end
 
   describe "set_pwm_duty_cycle" do
     test "one channel" do
-      {:ok, state} = PCA9685.start(%{})
+      state = PCA9685.new(%{})
       state = PCA9685.set_pwm_duty_cycle(state, 1, 60.0)
 
       assert [
-               nil,
+               0,
                60.0,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil,
-               nil
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0,
+               0
              ] == state.duty_cycles
     end
 
     test "all channels" do
-      {:ok, state} = PCA9685.start(%{})
+      state = PCA9685.new(%{})
       state = PCA9685.set_pwm_duty_cycle(state, :all, 60.0)
 
       assert [

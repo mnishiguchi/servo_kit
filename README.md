@@ -13,7 +13,7 @@ You can install this library by adding `servo_kit` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:servo_kit, "~> 0.0.3"}
+    {:servo_kit, "~> 0.0.4"}
   ]
 end
 ```
@@ -21,14 +21,14 @@ end
 ## Examples
 
 ```elixir
-# Start the LCD driver and get the initial state.
-{:ok, state} = ServoKit.PCA9685.start(%{i2c_bus_name: "i2c-1"})
+# Initialize a driver.
+{:ok, driver} = ServoKit.PCA9685.new(%{i2c_bus_name: "i2c-1"})
 
 # Set the frequency to 50Hz (period: 20ms).
-state = ServoKit.PCA9685.set_pwm_frequency(state, 50)
+{:ok, driver}  = ServoKit.PCA9685.set_pwm_frequency(driver, 50)
 
 # Set the duty cycle of Channel 0 to 7.5%.
-state = ServoKit.PCA9685.set_pwm_duty_cycle(state, 0, 7.5)
+{:ok, driver}  = ServoKit.PCA9685.set_pwm_duty_cycle(driver, 0, 7.5)
 ```
 
 ## Links
