@@ -1,12 +1,14 @@
 defmodule ServoKit.PCA9685 do
   @moduledoc """
-  Controls the PCA9685 PWM Servo Driver from Elixir.
-  See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf)
+  Controls the PCA9685 PWM Servo Driver.
+  See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf).
   """
-  use Bitwise
+  use Bitwise, only_operators: true
   require Logger
   import ServoKit.PCA9685.Util
   alias ServoKit.I2C, as: SerialBus
+
+  @behaviour ServoKit.Driver
 
   @general_call_address 0x00
   @software_reset 0x06
@@ -62,11 +64,7 @@ defmodule ServoKit.PCA9685 do
     )
   end
 
-  @doc """
-  Initialize the PCA9685.
-
-  iex> {:ok, state} = ServoKit.PCA9685.start(%{i2c_bus: "i2c-1"})
-  """
+  @impl true
   def start(config \\ %{}) do
     {:ok, i2c_ref} = SerialBus.open(config[:i2c_bus] || @default_i2c_bus)
     pca9685_address = config[:pca9685_address] || @default_pca9685_address
@@ -82,6 +80,45 @@ defmodule ServoKit.PCA9685 do
       |> set_pwm_frequency(frequency)
 
     {:ok, state}
+  end
+
+  @impl true
+  def set_pwm_frequency(%{reference_clock_speed: reference_clock_speed} = state, freq_hz) when is_integer(freq_hz) do
+    prescale = prescale_from_frequecy(freq_hz, reference_clock_speed)
+    Logger.debug("Set frequency to #{freq_hz}Hz (prescale: #{prescale})")
+
+    state
+    # go to sleep, turn off internal oscillator
+    |> update_mode1([
+      {@mode1_restart, false},
+      {@mode1_sleep, true}
+    ])
+    |> update_prescale(prescale)
+    |> delay(5)
+    # This sets the MODE1 register to turn on auto increment.
+    |> update_mode1([
+      {@mode1_restart, true},
+      {@mode1_sleep, false},
+      {@mode1_auto_increment, true}
+    ])
+  end
+
+  @impl true
+  def set_pwm_duty_cycle(%{duty_cycles: duty_cycles} = state, ch, percent)
+      when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
+    pulse_width = pulse_range_from_duty_cycle(percent)
+    Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
+    # Keep record in memory and write to the device.
+    %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
+    |> write_pulse_range(ch, pulse_width)
+  end
+
+  def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
+    pulse_width = pulse_range_from_duty_cycle(percent)
+    Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
+    # Keep record in memory and write to the device.
+    %{state | duty_cycles: List.duplicate(percent, 16)}
+    |> write_pulse_range(:all, pulse_width)
   end
 
   @doc """
@@ -117,58 +154,6 @@ defmodule ServoKit.PCA9685 do
   """
   def wake_up(state) do
     state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
-  end
-
-  @doc """
-  Sets the PWM frequency to the provided value in hertz. The PWM frequency is shared by all the channels.
-
-  ## Examples
-
-      iex> ServoKit.PCA9685.set_pwm_frequency(state, 50)
-  """
-  def set_pwm_frequency(%{reference_clock_speed: reference_clock_speed} = state, freq_hz) when is_integer(freq_hz) do
-    prescale = prescale_from_frequecy(freq_hz, reference_clock_speed)
-    Logger.debug("Set frequency to #{freq_hz}Hz (prescale: #{prescale})")
-
-    state
-    # go to sleep, turn off internal oscillator
-    |> update_mode1([
-      {@mode1_restart, false},
-      {@mode1_sleep, true}
-    ])
-    |> update_prescale(prescale)
-    |> delay(5)
-    # This sets the MODE1 register to turn on auto increment.
-    |> update_mode1([
-      {@mode1_restart, true},
-      {@mode1_sleep, false},
-      {@mode1_auto_increment, true}
-    ])
-  end
-
-  @doc """
-  Sets a single PWM channel or all PWM channels by specifying the duty cycle in percent.
-
-  ## Examples
-
-      iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, 0, 50.0)
-      iex> ServoKit.PCA9685.set_pwm_duty_cycle(state, :all, 50.0)
-  """
-  def set_pwm_duty_cycle(%{duty_cycles: duty_cycles} = state, ch, percent)
-      when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
-    pulse_width = pulse_range_from_duty_cycle(percent)
-    Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
-    # Keep record in memory and write to the device.
-    %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
-    |> write_pulse_range(ch, pulse_width)
-  end
-
-  def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
-    pulse_width = pulse_range_from_duty_cycle(percent)
-    Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
-    # Keep record in memory and write to the device.
-    %{state | duty_cycles: List.duplicate(percent, 16)}
-    |> write_pulse_range(:all, pulse_width)
   end
 
   # See [Datasheet 7.3.1](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).
