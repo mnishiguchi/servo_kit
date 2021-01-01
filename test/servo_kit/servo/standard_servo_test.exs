@@ -7,10 +7,10 @@ defmodule ServoKit.StandardServoTest do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  describe "start" do
+  describe "constructor" do
     test "with blank config" do
       setup_i2c_mock()
-      {:ok, state} = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
+      state = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
 
       assert %ServoKit.StandardServo{
                angle_max: 180,
@@ -30,7 +30,7 @@ defmodule ServoKit.StandardServoTest do
     test "with some config" do
       setup_i2c_mock()
 
-      {:ok, state} =
+      state =
         ServoKit.PCA9685.new(%{})
         |> ServoKit.StandardServo.new(%{
           angle_max: 177,
@@ -47,6 +47,21 @@ defmodule ServoKit.StandardServoTest do
       assert _state = ServoKit.StandardServo.new(%ServoKit.PCA9685{}, %{})
       assert_raise FunctionClauseError, fn -> ServoKit.StandardServo.new(%{}, %{}) end
     end
+  end
+
+  test "call" do
+    setup_i2c_mock()
+    state = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
+
+    assert {:ok, state} = ServoKit.StandardServo.call(state, {:set_angle, [0, 90]})
+    assert {:error, "Unsupported command: :hello"} = ServoKit.StandardServo.call(state, :hello)
+  end
+
+  test "set_angle" do
+    setup_i2c_mock()
+    state = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
+
+    {:ok, state} = ServoKit.StandardServo.set_angle(state, 0, 90)
   end
 
   defp setup_i2c_mock() do

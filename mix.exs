@@ -2,7 +2,7 @@ defmodule ServoKit.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/mnishiguchi/servo_kit"
-  @version "0.0.4"
+  @version "0.0.5"
 
   def project do
     [
@@ -23,8 +23,8 @@ defmodule ServoKit.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
-      # mod: {ServoKit.Application, []}
+      extra_applications: [:logger],
+      mod: {ServoKit.Application, []}
     ]
   end
 

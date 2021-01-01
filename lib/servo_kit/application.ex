@@ -8,14 +8,17 @@ defmodule ServoKit.Application do
   require Logger
 
   @impl true
-  def new(_type, _args) do
+  def start(_type, _args) do
     Logger.debug("#{__MODULE__} starting")
 
-    children = []
+    children = [
+      {ServoKit.ProcessRegistry, nil},
+      {ServoKit.ServoSupervisor, nil}
+    ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = []
+    opts = [strategy: :one_for_one, name: ServoKit.Supervisor]
 
     Supervisor.start_link(children, opts)
   end

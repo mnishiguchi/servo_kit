@@ -4,4 +4,5 @@ import Config
 # https://hexdocs.pm/mox/Mox.html
 config :servo_kit,
   i2c_module: ServoKit.MockI2C,
-  driver: ServoKit.MockDriver
+  driver: ServoKit.MockDriver,
+  servo: ServoKit.MockServo

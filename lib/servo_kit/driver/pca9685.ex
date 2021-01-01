@@ -66,11 +66,11 @@ defmodule ServoKit.PCA9685 do
     reference_clock_speed = config[:reference_clock_speed] || @default_reference_clock_speed
     frequency = config[:frequency] || @default_frequency
 
-    %ServoKit.PCA9685{
+    __struct__(
       i2c_ref: i2c_ref,
       pca9685_address: pca9685_address,
       reference_clock_speed: reference_clock_speed
-    }
+    )
     |> set_pwm_frequency(frequency)
   end
 
@@ -219,8 +219,8 @@ defmodule ServoKit.PCA9685 do
   # Writes data to the device.
   defp i2c_write(state, register, data) when register in 0..255 and data in 0..255 do
     %{i2c_ref: i2c_ref, pca9685_address: pca9685_address} = state
-    hex = fn val -> inspect(val, base: :hex) end
-    Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(pca9685_address)}")
+    # hex = fn val -> inspect(val, base: :hex) end
+    # Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(pca9685_address)}")
     :ok = SerialBus.write(i2c_ref, pca9685_address, <<register, data>>)
     state
   end
