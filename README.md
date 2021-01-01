@@ -22,13 +22,10 @@ end
 
 ```elixir
 # Initialize a driver.
-{:ok, driver} = ServoKit.PCA9685.new(%{i2c_bus_name: "i2c-1"})
-
-# Set the frequency to 50Hz (period: 20ms).
-{:ok, driver}  = ServoKit.PCA9685.set_pwm_frequency(driver, 50)
-
+%{i2c_bus_name: "i2c-1", frequency: 50}
+|> ServoKit.PCA9685.new()
 # Set the duty cycle of Channel 0 to 7.5%.
-{:ok, driver}  = ServoKit.PCA9685.set_pwm_duty_cycle(driver, 0, 7.5)
+|> ServoKit.PCA9685.set_pwm_duty_cycle(0, 7.5)
 ```
 
 ## Links
