@@ -1,6 +1,5 @@
 defmodule ServoKit.PCA9685Test do
   use ExUnit.Case
-  # doctest ServoKit.PCA9685
 
   # https://hexdocs.pm/mox/Mox.html
   import Mox

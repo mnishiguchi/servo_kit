@@ -17,7 +17,7 @@ defmodule ServoKit.ServoControllerTest do
   test "start_link" do
     setup_servo_mock()
     assert {:ok, pid} = ServoController.start_link(ServoKit.StandardServo, [driver_stub(), %{}])
-    assert {:error, "Unsupported command: :hello"} == ServoController.call(pid, :hello)
+    assert {:error, "Unsupported command: :hello"} == ServoController.run_command(pid, :hello)
   end
 
   defp setup_servo_mock() do

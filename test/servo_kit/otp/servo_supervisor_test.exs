@@ -14,7 +14,7 @@ defmodule ServoKit.ServoSupervisorTest do
     assert {:error, {:already_started, _pid}} = ServoSupervisor.start_link(nil)
   end
 
-  test "servo_controller returns a pidmix" do
+  test "servo_controller returns a pid" do
     setup_servo_mock()
 
     pid1 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])

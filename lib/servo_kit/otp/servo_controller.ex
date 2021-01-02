@@ -29,10 +29,6 @@ defmodule ServoKit.ServoController do
     end
   end
 
-  def unregister(servo_module) do
-    ServoKit.ProcessRegistry.unregister({__MODULE__, servo_module})
-  end
-
   @doc """
   Starts a servo driver process and registers the process.
 
@@ -52,9 +48,9 @@ defmodule ServoKit.ServoController do
 
   ## Examples
 
-      ServoKit.ServoController.call(pid, {:set_angle, [0, 180]})
+      ServoKit.ServoController.run_command(pid, {:set_angle, [0, 180]})
   """
-  def call(pid, command), do: GenServer.call(pid, command)
+  def run_command(pid, command), do: GenServer.call(pid, command)
 
   @impl true
   def init(servo), do: {:ok, servo}
@@ -63,13 +59,14 @@ defmodule ServoKit.ServoController do
   def handle_call(command, _from, servo) do
     Logger.debug(inspect([servo.__struct__, command]))
 
-    case result = control_servo(servo, command) do
+    case result = run_servo_command(servo, command) do
       {:ok, updated_servo} -> {:reply, result, updated_servo}
       {:error, _} -> {:reply, result, servo}
     end
   end
 
-  defp control_servo(servo, command) when is_struct(servo) do
+  # Delegates the operation to the servo module.
+  defp run_servo_command(servo, command) when is_struct(servo) do
     apply(servo.__struct__, :call, [servo, command])
   end
 end
