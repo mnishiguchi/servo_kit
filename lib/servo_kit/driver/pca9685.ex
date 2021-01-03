@@ -1,8 +1,9 @@
 defmodule ServoKit.PCA9685 do
   @moduledoc """
   Controls the PCA9685 PWM Servo Driver.
-  See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf).
+  See [PCA9685 datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf).
   """
+
   use Bitwise, only_operators: true
   require Logger
   import ServoKit.PCA9685.Util
@@ -45,6 +46,7 @@ defmodule ServoKit.PCA9685 do
 
   @default_i2c_bus "i2c-1"
   @default_pca9685_address 0x40
+  # The internal oscillator is 25 MHz. The external clock input, 50 MHz at most.
   @default_reference_clock_speed 25_000_000
   @default_frequency 50
 
@@ -53,11 +55,22 @@ defmodule ServoKit.PCA9685 do
     pca9685_address: nil,
     reference_clock_speed: nil,
     mode1: 0x11,
-    mode2: 0x04,
-    prescale: -1,
+    prescale: nil,
     # Duty cycles per channel.
     duty_cycles: List.duplicate(0, 16)
   )
+
+  @typedoc """
+  Configuration options for this module.
+  """
+  @type t :: %__MODULE__{
+          i2c_ref: reference(),
+          pca9685_address: pos_integer(),
+          reference_clock_speed: pos_integer(),
+          mode1: pos_integer(),
+          prescale: pos_integer(),
+          duty_cycles: list()
+        }
 
   @impl true
   def new(config \\ %{}) do
@@ -119,9 +132,7 @@ defmodule ServoKit.PCA9685 do
   Performs the software reset.
   See [PCA9685 Datasheet](https://cdn-shop.adafrut.com/datasheets/PCA9685.pdf) 7.1.4 and 7.6.
 
-  ## Examples
-
-      iex> ServoKit.PCA9685.reset(state)
+      ServoKit.PCA9685.reset(state)
   """
   def reset(%{i2c_ref: i2c_ref} = state) do
     :ok = SerialBus.write(i2c_ref, @general_call_address, <<@software_reset>>)
@@ -131,9 +142,7 @@ defmodule ServoKit.PCA9685 do
   @doc """
   Puts the board into the sleep mode.
 
-  ## Examples
-
-      iex> ServoKit.PCA9685.sleep(state)
+      ServoKit.PCA9685.sleep(state)
   """
   def sleep(state) do
     state |> assign_mode1(@mode1_sleep, true) |> write_mode1() |> delay(5)
@@ -142,9 +151,7 @@ defmodule ServoKit.PCA9685 do
   @doc """
   Wakes the board from the sleep mode.
 
-  ## Examples
-
-      iex> ServoKit.PCA9685.wake_up(state)
+      ServoKit.PCA9685.wake_up(state)
   """
   def wake_up(state) do
     state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
@@ -187,7 +194,7 @@ defmodule ServoKit.PCA9685 do
 
   # Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
   # These values must be between 0 and 4095.
-  # @spec write_pulse_range(ServoKit.PCA9685.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685{}
+  @spec write_pulse_range(ServoKit.PCA9685.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685{}
   defp write_pulse_range(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
     <<off_h_byte::4, off_l_byte::8>> = <<until::size(12)>>

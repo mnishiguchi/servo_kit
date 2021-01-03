@@ -30,9 +30,7 @@ defmodule ServoKit.ServoController do
   end
 
   @doc """
-  Starts a servo driver process and registers the process.
-
-  ## Examples
+  Starts a servo driver process.
 
       driver = ServoKit.PCA9685.new()
       {:ok, pid} = ServoKit.ServoController.start_link(ServoKit.StandardServo, [driver, %{}])
@@ -44,9 +42,7 @@ defmodule ServoKit.ServoController do
   end
 
   @doc """
-  Delegates the specified operation to the servo driver, and updates the state as needed.
-
-  ## Examples
+  Delegates the specified operation to the servo driver, and updates the servo state as needed.
 
       ServoKit.ServoController.run_command(pid, {:set_angle, [0, 180]})
   """

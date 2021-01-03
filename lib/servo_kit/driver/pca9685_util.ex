@@ -4,7 +4,7 @@ defmodule ServoKit.PCA9685.Util do
   """
 
   @doc """
-  ## Examples
+  Calculates 16-bit pulse range from a duty cycle in percent.
 
       iex> ServoKit.PCA9685.Util.pulse_range_from_duty_cycle(0)
       {0, 0}
@@ -23,13 +23,11 @@ defmodule ServoKit.PCA9685.Util do
   @pca9685_frequency_min 24
   @pca9685_frequency_max 1526
 
-  @pca9685_prescale_min 3
-  @pca9685_prescale_max 255
+  @pca9685_prescale_min 0x03
+  @pca9685_prescale_max 0xFF
 
   @doc """
-  Calculates the PWM frequency in Hertz based on specified prescale value and reference clock speed.
-
-  ## Example
+  Calculates the PWM frequency in Hz based on specified prescale value and reference clock speed.
 
       iex> ServoKit.PCA9685.Util.frequency_from_prescale(255, 25_000_000)
       24
@@ -47,10 +45,9 @@ defmodule ServoKit.PCA9685.Util do
   Calculates the PWM frequency prescale based on the formula in [Datasheet 7.3.5](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).
 
   ```
+  # Formula
   prescale_value = round(osc_value / (4096 * update_rate)) - 1
   ```
-
-  ## Examples
 
       iex> ServoKit.PCA9685.Util.prescale_from_frequecy(24, 25_000_000)
       253

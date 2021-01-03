@@ -1,8 +1,12 @@
 defmodule ServoKit do
-  @moduledoc false
+  @moduledoc """
+  A collection of convenience functions to use this library.
+  """
 
   @doc """
-  Initializes a standard servo.
+  Initializes a standard servo. For options, see `ServoKit.StandardServo` documentation.
+
+      pid = ServoKit.init_standard_servo()
   """
   def init_standard_servo(servo_options \\ %{}) do
     _pid =
@@ -15,7 +19,9 @@ defmodule ServoKit do
   end
 
   @doc """
-  Initializes a continuous servo.
+  Initializes a continuous servo. For options, see `ServoKit.ContinuousServo` documentation.
+
+      pid = ServoKit.init_continuous_servo()
   """
   def init_continuous_servo(servo_options \\ %{}) do
     _pid =
@@ -30,7 +36,7 @@ defmodule ServoKit do
   @doc """
   Initializes a `ServoController`.
 
-      ServoKit.init_servo_controller(
+      pid = ServoKit.init_servo_controller(
         driver_module: ServoKit.PCA9685,
         driver_options: %{},
         servo_module: ServoKit.StandardServo,
@@ -45,22 +51,25 @@ defmodule ServoKit do
   ## Servo commands
   ##
 
+  @doc """
+  Change the angle for a starndard servo.
+
+      # Set the angle to 90 degrees for Channel 0.
+      ServoKit.set_angle(pid, 0, 90)
+  """
   def set_angle(pid, channel, angle) when is_pid(pid) and channel in 0..15 and is_integer(angle) do
     ServoKit.ServoController.run_command(pid, {:set_angle, [channel, angle]})
   end
 
+  @doc """
+  Change the throttle for a continuous servo.
+
+      # Set the throttle to full speed reverse for Channel 8.
+      ServoKit.set_throttle(pid, 8, -1)
+  """
   def set_throttle(pid, channel, throttle)
       when is_pid(pid) and channel in 0..15 and throttle >= -1.0 and throttle <= 1.0 do
     ServoKit.ServoController.run_command(pid, {:set_throttle, [channel, throttle]})
-  end
-
-  @doc """
-  Runs a servo command through a `ServoController`.
-
-      ServoKit.run_servo_command(pid, {:set_angle, [0, 90]})
-  """
-  def run_servo_command(pid, command) do
-    ServoKit.ServoController.run_command(pid, command)
   end
 
   ##
@@ -70,9 +79,9 @@ defmodule ServoKit do
   @doc """
   Runs a quick-test program for the LED brightness.
 
-      ServoKit.hello_led
+      ServoKit.hello_led(15)
   """
-  def hello_led(channel \\ 15) do
+  def hello_led(channel) do
     driver = %{i2c_bus_name: "i2c-1", frequency: 50} |> ServoKit.PCA9685.new()
     increments = 1..10 |> Enum.to_list() |> Enum.map(&(&1 * 10))
     decrements = 9..0 |> Enum.to_list() |> Enum.map(&(&1 * 10))
@@ -87,9 +96,9 @@ defmodule ServoKit do
   @doc """
   Runs a quick-test program for the Standard Servo.
 
-      ServoKit.hello_standard_servo
+      ServoKit.hello_standard_servo(0)
   """
-  def hello_standard_servo(channel \\ 0) do
+  def hello_standard_servo(channel) do
     pid =
       init_servo_controller(
         driver_module: ServoKit.PCA9685,
@@ -98,12 +107,12 @@ defmodule ServoKit do
         servo_options: %{}
       )
 
-    run_servo_command(pid, {:set_angle, [0, 180]})
+    set_angle(pid, 0, 180)
     Process.sleep(1234)
 
     [0, 45, 90, 135, 180, 135, 90, 45, 0]
     |> Enum.each(fn deg ->
-      run_servo_command(pid, {:set_angle, [channel, deg]})
+      set_angle(pid, channel, deg)
       Process.sleep(555)
     end)
   end
@@ -111,9 +120,9 @@ defmodule ServoKit do
   @doc """
   Runs a quick-test program for the Continuous Servo.
 
-      ServoKit.hello_continuous_servo
+      ServoKit.hello_continuous_servo(8)
   """
-  def hello_continuous_servo(channel \\ 8) do
+  def hello_continuous_servo(channel) do
     pid =
       init_servo_controller(
         driver_module: ServoKit.PCA9685,
@@ -122,9 +131,9 @@ defmodule ServoKit do
         servo_options: %{}
       )
 
-    [-1, -0.5, 0, 1, 0.5, 0]
+    [-1, 0, 1, 0]
     |> Enum.each(fn throttle ->
-      run_servo_command(pid, {:set_throttle, [channel, throttle]})
+      set_throttle(pid, channel, throttle)
       Process.sleep(2000)
     end)
   end

@@ -14,14 +14,14 @@ defmodule ServoKit.ServoSupervisorTest do
     assert {:error, {:already_started, _pid}} = ServoSupervisor.start_link(nil)
   end
 
-  test "servo_controller returns a pid" do
+  test "servo_controller returns a different pid every call" do
     setup_servo_mock()
 
     pid1 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
-    pid2 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
-
     assert is_pid(pid1)
-    assert pid1 == pid2
+
+    pid2 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
+    refute Process.alive?(pid1)
   end
 
   defp setup_servo_mock() do
@@ -42,7 +42,6 @@ defmodule ServoKit.ServoSupervisorTest do
       duty_cycles: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       i2c_ref: make_ref(),
       mode1: 161,
-      mode2: 4,
       pca9685_address: 64,
       prescale: 121,
       reference_clock_speed: 25_000_000

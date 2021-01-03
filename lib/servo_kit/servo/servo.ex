@@ -15,23 +15,23 @@ defmodule ServoKit.Servo do
   @doc """
   Initializes the servo.
 
-  ## Examples
-
-      %{i2c_bus: "i2c-1"}
-      |> ServoKit.PCA9685.new()
-      |> ServoKit.StandardServo.new(%{
-        angle_max: 180,
-        duty_cycle_minmax: {2.5, 12.5}
-      })
+      servo =
+        %{i2c_bus: "i2c-1"}
+        |> ServoKit.PCA9685.new()
+        |> ServoKit.StandardServo.new(%{
+          angle_max: 180,
+          duty_cycle_minmax: {2.5, 12.5}
+        })
   """
   @callback new(driver, config) :: state | :no_return
 
   @doc """
   Executes the specified command and returns the updated state.
+  A command is made up of:
+  - a command name atom
+  - a list of arguments for the command, typically first one is a channel number
 
-  ## Examples
-
-      ServoKit.StandardServo.call(state, {:set_angle, [0, 90]})
+      {:ok, servo} = ServoKit.StandardServo.call(state, {:set_angle, [0, 90]})
   """
   @callback call(state, command) :: {:ok, state} | {:error, any} | :no_return
 end

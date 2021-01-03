@@ -38,7 +38,6 @@ defmodule ServoKit.ServoControllerTest do
       duty_cycles: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       i2c_ref: make_ref(),
       mode1: 161,
-      mode2: 4,
       pca9685_address: 64,
       prescale: 121,
       reference_clock_speed: 25_000_000

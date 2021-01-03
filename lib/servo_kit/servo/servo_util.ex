@@ -1,12 +1,10 @@
 defmodule ServoKit.ServoUtil do
   @moduledoc """
-  A collection of functions that are used for the servo abstractions.
+  A collection of pure functions that are used for the servo abstractions.
   """
 
   @doc """
   Calculates duty cycle in percent from an angle in degrees.
-
-  ## Examples
 
       iex> ServoKit.ServoUtil.duty_cycle_from_angle(0, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
       2.5
@@ -26,19 +24,17 @@ defmodule ServoKit.ServoUtil do
   Calculates duty cycle in percent from a throttle value between -1.0 (full speed reverse) and 1.0 (full speed forward) .
   Adjusts the duty cycle range based on `duty_cycle_mid` so that the servo stops at the throttle zero.
 
-  ## Examples
+      iex> ServoKit.ServoUtil.duty_cycle_from_throttle(-1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+      2.5
 
-     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(-1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
-     3.5
+      iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+      7.5
 
-     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
-     8.0
+      iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.5, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+      10.0
 
-     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.5, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
-     10.25
-
-     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
-     12.5
+      iex> ServoKit.ServoUtil.duty_cycle_from_throttle(1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+      12.5
   """
   def duty_cycle_from_throttle(throttle, %{
         duty_cycle_minmax: {duty_cycle_min, duty_cycle_max},
@@ -53,7 +49,15 @@ defmodule ServoKit.ServoUtil do
     |> map_range({0, 100}, {duty_cycle_mid - margin, duty_cycle_mid + margin})
   end
 
-  defp map_range(x, {in_min, in_max}, {out_min, out_max}) do
+  @doc """
+  Maps a given value in one range to another range.
+
+      iex> ServoKit.ServoUtil.map_range(25, {0, 100}, {0, 180})
+      45.0
+      iex> ServoKit.ServoUtil.map_range(50, {0, 100}, {0, 180})
+      90.0
+  """
+  def map_range(x, {in_min, in_max}, {out_min, out_max}) do
     (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
   end
 end

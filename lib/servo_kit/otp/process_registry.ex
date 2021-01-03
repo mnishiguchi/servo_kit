@@ -16,10 +16,8 @@ defmodule ServoKit.ProcessRegistry do
   @doc """
   Returns a standardized via-tuple for this registry.
 
-  ## Examples
-
-      iex> ProcessRegistry.via_tuple({MyController, 20})
-      {:via, Registry, {ProcessRegistry, {MyController, 20}}}
+      iex> ProcessRegistry.via_tuple(SomeKey)
+      {:via, Registry, {ProcessRegistry, SomeKey}}
   """
   def via_tuple(key) when is_tuple(key) do
     {:via, Registry, {__MODULE__, key}}
@@ -28,10 +26,11 @@ defmodule ServoKit.ProcessRegistry do
   @doc """
   Returns a PID or :undefined.
 
-  ## Examples
-
-      iex> ProcessRegistry.whereis_name({MyController, 20})
+      iex> ProcessRegistry.whereis_name(SomeKey)
       #PID<0.235.0>
+
+      iex> ProcessRegistry.whereis_name(OtherKey)
+      :undefined
   """
   def whereis_name(key) when is_tuple(key) do
     Registry.whereis_name({__MODULE__, key})
@@ -43,9 +42,5 @@ defmodule ServoKit.ProcessRegistry do
   def start_link() do
     Logger.debug("#{__MODULE__} starting")
     Registry.start_link(keys: :unique, name: __MODULE__)
-  end
-
-  def unregister(key) do
-    Registry.unregister(__MODULE__, key)
   end
 end

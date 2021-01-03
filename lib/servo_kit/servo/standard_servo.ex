@@ -1,20 +1,33 @@
 defmodule ServoKit.StandardServo do
   @moduledoc """
-  A standard servo.
+  The abstraction of the standard servo.
   """
 
   import ServoKit.ServoUtil
 
   @behaviour ServoKit.Servo
 
-  @default_angle_max 180
   @default_duty_cycle_minmax {2.5, 12.5}
+  @default_angle_max 180
 
   defstruct(
     driver: nil,
     angle_max: 0,
     duty_cycle_minmax: nil
   )
+
+  @typedoc """
+  Configuration options for this module.
+
+  - `driver`: A driver struct.
+  - `duty_cycle_minmax`: A tuple of duty cycle min and max in percent.
+  - `angle_max`: A maximum angle that this servo can move to.
+  """
+  @type t :: %__MODULE__{
+          driver: struct(),
+          angle_max: integer(),
+          duty_cycle_minmax: {float(), float()}
+        }
 
   @impl true
   def new(driver, config \\ %{}) when is_struct(driver) and is_map(config) do
@@ -30,9 +43,7 @@ defmodule ServoKit.StandardServo do
   def call(_display, command), do: {:error, "Unsupported command: #{inspect(command)}"}
 
   @doc """
-  Moves the actuator to the specified position in angle.
-
-  ## Examples
+  Moves the actuator to the specified angle.
 
       {:ok, state} = ServoKit.StandardServo.set_angle(state, 0, 90)
   """

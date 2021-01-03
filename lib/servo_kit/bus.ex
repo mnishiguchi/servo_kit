@@ -1,7 +1,8 @@
 defmodule ServoKit.I2C do
   @moduledoc """
   Lets you communicate with hardware devices using the I2C protocol.
-  A thin wrapper of [elixir-circuits/circuits_i2c](https://github.com/elixir-circuits/circuits_i2c).
+  A thin wrapper of [elixir-circuits/circuits_i2c](https://github.com/elixir-circuits/circuits_i2c)
+  so that we can replace the implemention with a mock in test.
   """
 
   defmodule Behaviour do

@@ -1,6 +1,6 @@
 defmodule ServoKit.ContinuousServo do
   @moduledoc """
-  A standard servo.
+  The abstraction of the continuous servo.
   """
 
   import ServoKit.ServoUtil
@@ -8,7 +8,7 @@ defmodule ServoKit.ContinuousServo do
   @behaviour ServoKit.Servo
 
   @default_duty_cycle_minmax {2.5, 12.5}
-  @default_duty_cycle_mid 8.0
+  @default_duty_cycle_mid 7.5
 
   defstruct(
     driver: nil,
@@ -16,14 +16,24 @@ defmodule ServoKit.ContinuousServo do
     duty_cycle_mid: nil
   )
 
+  @typedoc """
+  Configuration options for this module.
+
+  - `driver`: A driver struct.
+  - `duty_cycle_minmax`: A tuple of duty cycle min and max in percent.
+  - `duty_cycle_mid`: A duty cycle in percent at which the servo stops its movement.
+  """
+  @type t :: %__MODULE__{
+          driver: struct(),
+          duty_cycle_mid: float(),
+          duty_cycle_minmax: {float(), float()}
+        }
+
   @impl true
   def new(driver, config \\ %{}) when is_struct(driver) and is_map(config) do
     __struct__(
-      # A driver struct
       driver: driver,
-      # A tuple of duty cycle min and max in percent
       duty_cycle_minmax: config[:duty_cycle_minmax] || @default_duty_cycle_minmax,
-      # A duty cycle in percent at which the servo stops its movement.
       duty_cycle_mid: config[:duty_cycle_mid] || @default_duty_cycle_mid
     )
   end
@@ -33,12 +43,10 @@ defmodule ServoKit.ContinuousServo do
   def call(_display, command), do: {:error, "Unsupported command: #{inspect(command)}"}
 
   @doc """
-  Change the motor speed, ranging from -1.0 (full speed reverse) to 1.0 (full speed forward).
+  Change the motor movement, ranging from -1.0 (full throttle reverse) to 1.0 (full throttle forward).
 
-  ## Examples
-
-      {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, 1.0)   # Full speed forward
-      {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, -1.0)  # Full speed reverse
+      {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, 1.0)   # Full throttle forward
+      {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, -1.0)  # Full throttle reverse
       {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, 0.0)   # Stop the movement
   """
   def set_throttle(%{driver: driver} = state, ch, throttle)

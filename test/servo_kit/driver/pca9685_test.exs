@@ -16,7 +16,7 @@ defmodule ServoKit.PCA9685Test do
 
   describe "start" do
     test "no config" do
-      assert %PCA9685{i2c_ref: _ref, mode1: 0xA1, mode2: 0x04, pca9685_address: 0x40, prescale: 121} = PCA9685.new()
+      assert %PCA9685{i2c_ref: _ref, mode1: 0xA1, pca9685_address: 0x40, prescale: 121} = PCA9685.new()
     end
 
     test "blank config" do

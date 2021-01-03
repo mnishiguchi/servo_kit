@@ -13,7 +13,7 @@ You can install this library by adding `servo_kit` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:servo_kit, "~> 0.0.7"}
+    {:servo_kit, "~> 0.0.8"}
   ]
 end
 ```
@@ -49,13 +49,15 @@ ServoKit.set_angle(pid, 0, 180)
 pid = ServoKit.init_continuous_servo(%{
   duty_cycle_minmax: {2.5, 12.5},
   # A duty cycle in percent at which the servo stops its movement.
-  duty_cycle_mid: 8.0
+  duty_cycle_mid: 7.5
 })
 
 # Throttle full forward for Channel 8.
 ServoKit.set_throttle(pid, 8, 1)
+
 # Throttle full reverse for Channel 8.
 ServoKit.set_throttle(pid, 8, -1)
+
 # Stop the movement for Channel 8.
 ServoKit.set_throttle(pid, 8, 0)
 ```
