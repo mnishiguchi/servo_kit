@@ -13,36 +13,51 @@ You can install this library by adding `servo_kit` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:servo_kit, "~> 0.0.6"}
+    {:servo_kit, "~> 0.0.7"}
   ]
 end
 ```
 
 ## Examples
 
-### Basic usage
+### Dimming an LED
 
 ```elixir
 # Initialize a driver.
-%{i2c_bus_name: "i2c-1", frequency: 50}
-|> ServoKit.PCA9685.new()
-# Set the duty cycle to 66.6% for Channel 15.
-|> ServoKit.PCA9685.set_pwm_duty_cycle(15, 66.6)
-```
+driver = ServoKit.PCA9685.new(%{i2c_bus_name: "i2c-1", frequency: 50})
 
+# Set the duty cycle to 66.6% for Channel 15.
+ServoKit.PCA9685.set_pwm_duty_cycle(driver, 15, 66.6)
+```
 ### Controling a standard servo
 
 ```elixir
-pid =
-  ServoKit.init_servo_controller(
-    driver_module: ServoKit.PCA9685,
-    driver_options: %{},
-    servo_module: ServoKit.StandardServo,
-    servo_options: %{}
-  )
+# Initialize a standard servo controller.
+pid = ServoKit.init_standard_servo(%{
+  duty_cycle_minmax: {2.5, 12.5},
+  angle_max: 180
+})
 
 # Set the angle to 180 degrees for Channel 0.
-ServoKit.run_servo_command(pid, {:set_angle, [0, 180]})
+ServoKit.set_angle(pid, 0, 180)
+```
+
+### Controling a continuous servo
+
+```elixir
+# Initialize a continuous servo controller.
+pid = ServoKit.init_continuous_servo(%{
+  duty_cycle_minmax: {2.5, 12.5},
+  # A duty cycle in percent at which the servo stops its movement.
+  duty_cycle_mid: 8.0
+})
+
+# Throttle full forward for Channel 8.
+ServoKit.set_throttle(pid, 8, 1)
+# Throttle full reverse for Channel 8.
+ServoKit.set_throttle(pid, 8, -1)
+# Stop the movement for Channel 8.
+ServoKit.set_throttle(pid, 8, 0)
 ```
 
 ## Links

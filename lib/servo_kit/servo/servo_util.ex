@@ -8,43 +8,49 @@ defmodule ServoKit.ServoUtil do
 
   ## Examples
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.duty_cycle_from_angle(driver, 0)
+      iex> ServoKit.ServoUtil.duty_cycle_from_angle(0, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
       2.5
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.duty_cycle_from_angle(driver, 90)
+      iex> ServoKit.ServoUtil.duty_cycle_from_angle(90, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
       7.5
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.duty_cycle_from_angle(driver, 180)
+      iex> ServoKit.ServoUtil.duty_cycle_from_angle(180, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
       12.5
   """
-  def duty_cycle_from_angle(%{duty_cycle_minmax: duty_cycle_minmax}, angle)
-      when is_tuple(duty_cycle_minmax) and angle in 0..180 do
-    map_range(angle, {0, 180}, duty_cycle_minmax)
+  def duty_cycle_from_angle(angle, %{angle_max: angle_max, duty_cycle_minmax: {duty_cycle_min, duty_cycle_max}})
+      when angle in 0..180 and duty_cycle_min < duty_cycle_max do
+    map_range(angle, {0, angle_max}, {duty_cycle_min, duty_cycle_max})
   end
 
   @doc """
-  Calculates angle in degrees from a duty cycle in percent.
+  Calculates duty cycle in percent from a throttle value between -1.0 (full speed reverse) and 1.0 (full speed forward) .
+  Adjusts the duty cycle range based on `duty_cycle_mid` so that the servo stops at the throttle zero.
 
   ## Examples
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.angle_from_duty_cycle(driver, 2.5)
-      0
+     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(-1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
+     3.5
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.angle_from_duty_cycle(driver, 7.5)
-      90
+     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
+     8.0
 
-      iex> driver = %{actuation_range: 170, duty_cycle_minmax: {2.5, 12.5}}
-      ...> ServoKit.ServoUtil.angle_from_duty_cycle(driver, 12.5)
-      180
+     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.5, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
+     10.25
+
+     iex> ServoKit.ServoUtil.duty_cycle_from_throttle(1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
+     12.5
   """
-  def angle_from_duty_cycle(%{duty_cycle_minmax: duty_cycle_minmax}, duty_cycle)
-      when is_tuple(duty_cycle_minmax) and duty_cycle >= 0.0 and duty_cycle <= 100.0 do
-    map_range(duty_cycle, duty_cycle_minmax, {0, 180}) |> round
+  def duty_cycle_from_throttle(throttle, %{
+        duty_cycle_minmax: {duty_cycle_min, duty_cycle_max},
+        duty_cycle_mid: duty_cycle_mid
+      })
+      when throttle >= -1.0 and throttle <= 1.0 and duty_cycle_min < duty_cycle_mid and
+             duty_cycle_min < duty_cycle_max do
+    throttle_in_percent = (throttle + 1) / 2 * 100.0
+    margin = min(abs(duty_cycle_mid - duty_cycle_min), abs(duty_cycle_mid - duty_cycle_max))
+
+    throttle_in_percent
+    |> map_range({0, 100}, {duty_cycle_mid - margin, duty_cycle_mid + margin})
   end
 
   defp map_range(x, {in_min, in_max}, {out_min, out_max}) do

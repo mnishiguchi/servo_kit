@@ -13,7 +13,6 @@ defmodule ServoKit.StandardServoTest do
       state = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
 
       assert %ServoKit.StandardServo{
-               angle_max: 180,
                driver: %ServoKit.PCA9685{
                  duty_cycles: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                  i2c_ref: _,
@@ -23,6 +22,7 @@ defmodule ServoKit.StandardServoTest do
                  prescale: 121,
                  reference_clock_speed: 25_000_000
                },
+               angle_max: 180,
                duty_cycle_minmax: {2.5, 12.5}
              } = state
     end

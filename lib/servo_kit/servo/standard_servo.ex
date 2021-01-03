@@ -11,9 +11,9 @@ defmodule ServoKit.StandardServo do
   @default_duty_cycle_minmax {2.5, 12.5}
 
   defstruct(
-    driver: %{},
+    driver: nil,
     angle_max: 0,
-    duty_cycle_minmax: {}
+    duty_cycle_minmax: nil
   )
 
   @impl true
@@ -42,7 +42,7 @@ defmodule ServoKit.StandardServo do
       raise("Angle #{angle} is out of actuation range #{angle_max}")
     else
       with driver_module <- driver.__struct__,
-           duty_cycle <- duty_cycle_from_angle(state, angle),
+           duty_cycle <- duty_cycle_from_angle(angle, state),
            driver <- apply(driver_module, :set_pwm_duty_cycle, [driver, ch, duty_cycle]) do
         {:ok, %{state | driver: driver}}
       end
