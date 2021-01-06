@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         elixir: [1.11]
-        otp: [23.2]
+        otp: [23]
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0
@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         elixir: [1.11]
-        otp: [23.2]
+        otp: [23]
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0
@@ -95,8 +95,8 @@ jobs:
       - name: Run Credo
         run: mix credo
 
-      # - name: Run Dialyzer
-      #   run: mix dialyzer --no-check --halt-exit-status
+      - name: Run Dialyzer
+        run: mix dialyzer --no-check --halt-exit-status
 
   unit_tests:
     name: Unit Tests
@@ -106,7 +106,7 @@ jobs:
       fail-fast: false
       matrix:
         elixir: [1.11]
-        otp: [23.2]
+        otp: [23]
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.6.0

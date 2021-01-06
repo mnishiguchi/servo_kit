@@ -3,14 +3,16 @@ defmodule ServoKit.Servo do
   Defines a behaviour required for a servo.
   """
 
-  @type config :: map()
   @type driver :: struct()
-  @type state :: struct()
+  @type config :: map()
+  @type servo :: struct()
 
   @typedoc """
   Type that represents a servo command.
   """
-  @type command :: atom | {atom, list}
+  @type command :: command_name | {command_name, command_args}
+  @type command_name :: atom()
+  @type command_args :: list()
 
   @doc """
   Initializes the servo.
@@ -23,15 +25,12 @@ defmodule ServoKit.Servo do
           duty_cycle_minmax: {2.5, 12.5}
         })
   """
-  @callback new(driver, config) :: state | {:error, any}
+  @callback new(driver, config) :: servo | {:error, any}
 
   @doc """
   Executes the specified command and returns the updated state.
-  A command is made up of:
-  - a command name atom
-  - a list of arguments for the command, typically first one is a channel number
 
-      {:ok, servo} = ServoKit.StandardServo.call(state, {:set_angle, [0, 90]})
+      {:ok, servo} = ServoKit.StandardServo.call(servo, {:set_angle, [0, 90]})
   """
-  @callback call(state, command) :: {:ok, state} | {:error, any}
+  @callback call(servo, command) :: {:ok, servo} | {:error, any}
 end

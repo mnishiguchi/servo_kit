@@ -44,7 +44,7 @@ defmodule ServoKit.ContinuousServoTest do
     setup_i2c_mock()
     state = ServoKit.PCA9685.new(%{}) |> ServoKit.ContinuousServo.new(%{})
 
-    {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 0, -0.5)
+    assert {:ok, _} = ServoKit.ContinuousServo.set_throttle(state, 0, -0.5)
   end
 
   defp setup_i2c_mock() do

@@ -2,7 +2,7 @@ defmodule ServoKit.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/mnishiguchi/servo_kit"
-  @version "0.0.8"
+  @version "0.0.9"
 
   def project do
     [
@@ -39,8 +39,8 @@ defmodule ServoKit.MixProject do
       {:mox, "~> 1.0.0", only: :test},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
-      # {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 

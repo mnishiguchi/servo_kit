@@ -82,7 +82,7 @@ defmodule ServoKit do
       ServoKit.hello_led(15)
   """
   def hello_led(channel) do
-    driver = %{i2c_bus_name: "i2c-1", frequency: 50} |> ServoKit.PCA9685.new()
+    driver = %{i2c_bus: "i2c-1", frequency: 50} |> ServoKit.PCA9685.new()
     increments = 1..10 |> Enum.to_list() |> Enum.map(&(&1 * 10))
     decrements = 9..0 |> Enum.to_list() |> Enum.map(&(&1 * 10))
 

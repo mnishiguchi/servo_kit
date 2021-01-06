@@ -17,11 +17,7 @@ defmodule ServoKit.StandardServo do
   )
 
   @typedoc """
-  Configuration options for this module.
-
-  - `driver`: A driver struct.
-  - `duty_cycle_minmax`: A tuple of duty cycle min and max in percent.
-  - `angle_max`: A maximum angle that this servo can move to.
+  The internal state.
   """
   @type t :: %__MODULE__{
           driver: struct(),
@@ -29,7 +25,19 @@ defmodule ServoKit.StandardServo do
           duty_cycle_minmax: {float(), float()}
         }
 
+  @typedoc """
+  The configuration options.
+
+  - `duty_cycle_minmax`: A tuple of duty cycle min and max in percent.
+  - `angle_max`: A maximum angle that this servo can move to.
+  """
+  @type config :: %{
+          optional(:duty_cycle_minmax) => {float, float},
+          optional(:angle_max) => float()
+        }
+
   @impl true
+  @spec new(struct(), config()) :: t() | {:error, any()}
   def new(driver, config \\ %{}) when is_struct(driver) and is_map(config) do
     __struct__(
       driver: driver,
@@ -49,8 +57,7 @@ defmodule ServoKit.StandardServo do
 
       {:ok, state} = ServoKit.StandardServo.set_angle(state, 0, 90)
   """
-  def set_angle(%{driver: driver, angle_max: angle_max} = state, ch, angle)
-      when ch in 0..15 and angle in 0..180 do
+  def set_angle(%{driver: driver, angle_max: angle_max} = state, ch, angle) when ch in 0..15 and angle in 0..180 do
     if angle > angle_max do
       raise("Angle #{angle} is out of actuation range #{angle_max}")
     else

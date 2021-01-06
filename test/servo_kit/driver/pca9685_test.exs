@@ -24,7 +24,7 @@ defmodule ServoKit.PCA9685Test do
     end
 
     test "some config" do
-      assert _state = PCA9685.new(%{i2c_bus_name: "i2c-1"})
+      assert _state = PCA9685.new(%{i2c_bus: "i2c-1"})
     end
   end
 

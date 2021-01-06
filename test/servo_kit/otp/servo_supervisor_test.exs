@@ -20,7 +20,7 @@ defmodule ServoKit.ServoSupervisorTest do
     pid1 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
     assert is_pid(pid1)
 
-    pid2 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
+    _pid2 = ServoSupervisor.servo_controller(ServoKit.StandardServo, [driver_stub(), %{}])
     refute Process.alive?(pid1)
   end
 

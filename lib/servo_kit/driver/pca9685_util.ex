@@ -4,17 +4,17 @@ defmodule ServoKit.PCA9685.Util do
   """
 
   @doc """
-  Calculates 16-bit pulse range from a duty cycle in percent.
+  Calculates 12-bit pulse range from a percentage value.
 
-      iex> ServoKit.PCA9685.Util.pulse_range_from_duty_cycle(0)
+      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(0.0)
       {0, 0}
-      iex> ServoKit.PCA9685.Util.pulse_range_from_duty_cycle(50)
+      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(50.0)
       {0, 2048}
-      iex> ServoKit.PCA9685.Util.pulse_range_from_duty_cycle(100)
+      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(100.0)
       {0, 4095}
   """
-  @spec pulse_range_from_duty_cycle(float()) :: {0, 0..0xFFF}
-  def pulse_range_from_duty_cycle(percent) when percent >= 0.0 and percent <= 100.0 do
+  @spec pulse_range_from_percentage(float()) :: {0, 0..0xFFF}
+  def pulse_range_from_percentage(percent) when percent >= 0.0 and percent <= 100.0 do
     {0, round(4095.0 * percent / 100)}
   end
 

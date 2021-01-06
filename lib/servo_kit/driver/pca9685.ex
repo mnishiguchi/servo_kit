@@ -61,7 +61,7 @@ defmodule ServoKit.PCA9685 do
   )
 
   @typedoc """
-  Configuration options for this module.
+  The internal state.
   """
   @type t :: %__MODULE__{
           i2c_ref: reference(),
@@ -72,7 +72,18 @@ defmodule ServoKit.PCA9685 do
           duty_cycles: list()
         }
 
+  @typedoc """
+  The configuration options.
+  """
+  @type config :: %{
+          optional(:i2c_bus) => String.t(),
+          optional(:pca9685_address) => pos_integer(),
+          optional(:reference_clock_speed) => pos_integer(),
+          optional(:frequency) => pos_integer()
+        }
+
   @impl true
+  @spec new(config()) :: t() | {:error, any()}
   def new(config \\ %{}) do
     {:ok, i2c_ref} = SerialBus.open(config[:i2c_bus] || @default_i2c_bus)
     pca9685_address = config[:pca9685_address] || @default_pca9685_address
@@ -115,7 +126,7 @@ defmodule ServoKit.PCA9685 do
   @impl true
   def set_pwm_duty_cycle(%{duty_cycles: duty_cycles} = state, ch, percent)
       when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
-    pulse_width = pulse_range_from_duty_cycle(percent)
+    pulse_width = pulse_range_from_percentage(percent)
     Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
     # Keep record in memory and write to the device.
 
@@ -126,7 +137,7 @@ defmodule ServoKit.PCA9685 do
   end
 
   def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
-    pulse_width = pulse_range_from_duty_cycle(percent)
+    pulse_width = pulse_range_from_percentage(percent)
     Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
     # Keep record in memory and write to the device.
 
@@ -206,10 +217,12 @@ defmodule ServoKit.PCA9685 do
   ## Writers that send data to the PCA9685 device
   ##
 
-  # Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
-  # These values must be between 0 and 4095.
-  @spec write_pulse_range(ServoKit.PCA9685.t(), :all | byte, {char, char}) :: %ServoKit.PCA9685{}
-  defp write_pulse_range(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
+  @doc """
+  Sets a single PWM channel or all PWM channels by specifying when to switch on and when to switch off in a period.
+  These values must be between 0 and 4095.
+  """
+  @spec write_pulse_range(ServoKit.PCA9685.t(), :all | byte, {char, char}) :: t()
+  def write_pulse_range(state, ch, {from, until}) when ch in 0..15 and from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
     <<off_h_byte::4, off_l_byte::8>> = <<until::size(12)>>
 
@@ -220,7 +233,7 @@ defmodule ServoKit.PCA9685 do
     |> i2c_write(@pca9685_led0_off_h + 4 * ch, off_h_byte)
   end
 
-  defp write_pulse_range(state, :all, {from, until}) when from in 0..0xFFF and until in 0..0xFFF do
+  def write_pulse_range(state, :all, {from, until}) when from in 0..0xFFF and until in 0..0xFFF do
     <<on_h_byte::4, on_l_byte::8>> = <<from::size(12)>>
     <<off_h_byte::4, off_l_byte::8>> = <<until::size(12)>>
 

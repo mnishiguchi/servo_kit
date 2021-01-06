@@ -60,7 +60,7 @@ defmodule ServoKit.StandardServoTest do
     setup_i2c_mock()
     state = ServoKit.PCA9685.new(%{}) |> ServoKit.StandardServo.new(%{})
 
-    {:ok, state} = ServoKit.StandardServo.set_angle(state, 0, 90)
+    assert {:ok, _} = ServoKit.StandardServo.set_angle(state, 0, 90)
   end
 
   defp setup_i2c_mock() do

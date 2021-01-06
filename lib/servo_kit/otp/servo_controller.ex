@@ -1,7 +1,7 @@
 defmodule ServoKit.ServoController do
   @moduledoc """
-  Wraps a servo module and controls a servo using that module.
-  The servo state will be kept in a process.
+  Wraps a `ServoKit.Servo` implementation and controls a servo using it.
+  The servo state will be held in a process.
   """
 
   use GenServer

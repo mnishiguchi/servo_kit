@@ -1,6 +1,6 @@
 defmodule ServoKit.ServoSupervisor do
   @moduledoc """
-  Supervises servo controller processes.
+  Supervises `ServoKit.ServoController` processes.
   """
 
   # https://hexdocs.pm/elixir/DynamicSupervisor.html
@@ -21,7 +21,7 @@ defmodule ServoKit.ServoSupervisor do
   end
 
   @doc """
-  Creates a `ServoController` process.
+  Creates a `ServoKit.ServoController` process.
 
       pid = ServoKit.ServoSupervisor.servo_controller(
         driver_module: ServoKit.PCA9685,
@@ -44,7 +44,7 @@ defmodule ServoKit.ServoSupervisor do
   end
 
   @doc """
-  Creates a `ServoController` process.
+  Creates a `ServoKit.ServoController` process.
 
       driver = ServoKit.PCA9685.new(%{})
       servo_moodule = ServoKit.StandardServo

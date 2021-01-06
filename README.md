@@ -1,7 +1,7 @@
 # ServoKit
 
 [![Hex.pm](https://img.shields.io/hexpm/v/servo_kit.svg)](https://hex.pm/packages/servo_kit)
-[![API docs](https://img.shields.io/hexpm/v/servo_kit.svg?label=hexdocs)](https://hexdocs.pm/servo_kit)
+[![API docs](https://img.shields.io/hexpm/v/servo_kit.svg?label=docs)](https://hexdocs.pm/servo_kit)
 ![CI](https://github.com/mnishiguchi/pca9685/workflows/CI/badge.svg)
 
 Drive PCA9685 PWM/Servo Controller using Elixir
@@ -13,7 +13,7 @@ You can install this library by adding `servo_kit` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:servo_kit, "~> 0.0.8"}
+    {:servo_kit, "~> 0.0.9"}
   ]
 end
 ```
@@ -24,7 +24,7 @@ end
 
 ```elixir
 # Initialize a driver.
-driver = ServoKit.PCA9685.new(%{i2c_bus_name: "i2c-1", frequency: 50})
+driver = ServoKit.PCA9685.new(%{i2c_bus: "i2c-1", frequency: 50})
 
 # Set the duty cycle to 66.6% for Channel 15.
 ServoKit.PCA9685.set_pwm_duty_cycle(driver, 15, 66.6)
@@ -33,10 +33,7 @@ ServoKit.PCA9685.set_pwm_duty_cycle(driver, 15, 66.6)
 
 ```elixir
 # Initialize a standard servo controller.
-pid = ServoKit.init_standard_servo(%{
-  duty_cycle_minmax: {2.5, 12.5},
-  angle_max: 180
-})
+pid = ServoKit.init_standard_servo(%{duty_cycle_minmax: {2.5, 12.5}, angle_max: 180})
 
 # Set the angle to 180 degrees for Channel 0.
 ServoKit.set_angle(pid, 0, 180)
@@ -46,11 +43,7 @@ ServoKit.set_angle(pid, 0, 180)
 
 ```elixir
 # Initialize a continuous servo controller.
-pid = ServoKit.init_continuous_servo(%{
-  duty_cycle_minmax: {2.5, 12.5},
-  # A duty cycle in percent at which the servo stops its movement.
-  duty_cycle_mid: 7.5
-})
+pid = ServoKit.init_continuous_servo(%{duty_cycle_minmax: {2.5, 12.5}})
 
 # Throttle full forward for Channel 8.
 ServoKit.set_throttle(pid, 8, 1)
