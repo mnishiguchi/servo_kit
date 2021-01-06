@@ -23,7 +23,7 @@ defmodule ServoKit.Servo do
           duty_cycle_minmax: {2.5, 12.5}
         })
   """
-  @callback new(driver, config) :: state | :no_return
+  @callback new(driver, config) :: state | {:error, any}
 
   @doc """
   Executes the specified command and returns the updated state.
@@ -33,5 +33,5 @@ defmodule ServoKit.Servo do
 
       {:ok, servo} = ServoKit.StandardServo.call(state, {:set_angle, [0, 90]})
   """
-  @callback call(state, command) :: {:ok, state} | {:error, any} | :no_return
+  @callback call(state, command) :: {:ok, state} | {:error, any}
 end

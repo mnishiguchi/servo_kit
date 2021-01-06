@@ -36,6 +36,8 @@ defmodule ServoKit.StandardServo do
       angle_max: config[:angle_max] || @default_angle_max,
       duty_cycle_minmax: config[:duty_cycle_minmax] || @default_duty_cycle_minmax
     )
+  rescue
+    e -> {:error, e.message}
   end
 
   @impl true
@@ -58,5 +60,7 @@ defmodule ServoKit.StandardServo do
         {:ok, %{state | driver: driver}}
       end
     end
+  rescue
+    e -> {:error, e.message}
   end
 end

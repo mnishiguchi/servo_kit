@@ -85,6 +85,8 @@ defmodule ServoKit.PCA9685 do
       reference_clock_speed: reference_clock_speed
     )
     |> set_pwm_frequency(frequency)
+  rescue
+    e -> {:error, e.message}
   end
 
   @impl true
@@ -106,6 +108,8 @@ defmodule ServoKit.PCA9685 do
       {@mode1_sleep, false},
       {@mode1_auto_increment, true}
     ])
+  rescue
+    e -> {:error, e.message}
   end
 
   @impl true
@@ -117,6 +121,8 @@ defmodule ServoKit.PCA9685 do
 
     %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
     |> write_pulse_range(ch, pulse_width)
+  rescue
+    e -> {:error, e.message}
   end
 
   def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
@@ -126,6 +132,8 @@ defmodule ServoKit.PCA9685 do
 
     %{state | duty_cycles: List.duplicate(percent, 16)}
     |> write_pulse_range(:all, pulse_width)
+  rescue
+    e -> {:error, e.message}
   end
 
   @doc """
@@ -137,6 +145,8 @@ defmodule ServoKit.PCA9685 do
   def reset(%{i2c_ref: i2c_ref} = state) do
     :ok = SerialBus.write(i2c_ref, @general_call_address, <<@software_reset>>)
     state
+  rescue
+    e -> {:error, e.message}
   end
 
   @doc """
@@ -146,6 +156,8 @@ defmodule ServoKit.PCA9685 do
   """
   def sleep(state) do
     state |> assign_mode1(@mode1_sleep, true) |> write_mode1() |> delay(5)
+  rescue
+    e -> {:error, e.message}
   end
 
   @doc """
@@ -155,6 +167,8 @@ defmodule ServoKit.PCA9685 do
   """
   def wake_up(state) do
     state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
+  rescue
+    e -> {:error, e.message}
   end
 
   # See [Datasheet 7.3.1](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).

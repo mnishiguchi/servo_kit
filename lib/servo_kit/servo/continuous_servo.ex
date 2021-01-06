@@ -36,6 +36,8 @@ defmodule ServoKit.ContinuousServo do
       duty_cycle_minmax: config[:duty_cycle_minmax] || @default_duty_cycle_minmax,
       duty_cycle_mid: config[:duty_cycle_mid] || @default_duty_cycle_mid
     )
+  rescue
+    e -> {:error, e.message}
   end
 
   @impl true
@@ -56,5 +58,7 @@ defmodule ServoKit.ContinuousServo do
          driver <- apply(driver_module, :set_pwm_duty_cycle, [driver, ch, duty_cycle]) do
       {:ok, %{state | driver: driver}}
     end
+  rescue
+    e -> {:error, e.message}
   end
 end
