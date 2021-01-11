@@ -12,7 +12,7 @@ defmodule ServoKit.StandardServo do
 
   defstruct(
     driver: nil,
-    angle_max: 0,
+    angle_max: nil,
     duty_cycle_minmax: nil
   )
 
@@ -22,7 +22,7 @@ defmodule ServoKit.StandardServo do
   @type t :: %__MODULE__{
           driver: struct(),
           angle_max: integer(),
-          duty_cycle_minmax: {float(), float()}
+          duty_cycle_minmax: {number(), number()}
         }
 
   @typedoc """
@@ -32,8 +32,8 @@ defmodule ServoKit.StandardServo do
   - `angle_max`: A maximum angle that this servo can move to.
   """
   @type config :: %{
-          optional(:duty_cycle_minmax) => {float, float},
-          optional(:angle_max) => float()
+          optional(:duty_cycle_minmax) => {number, number},
+          optional(:angle_max) => number()
         }
 
   @impl true
@@ -57,12 +57,14 @@ defmodule ServoKit.StandardServo do
 
       {:ok, state} = ServoKit.StandardServo.set_angle(state, 0, 90)
   """
-  def set_angle(%{driver: driver, angle_max: angle_max} = state, ch, angle) when ch in 0..15 and angle in 0..180 do
+  def set_angle(%{driver: driver, angle_max: angle_max} = state, ch, angle)
+      when is_integer(ch) and ch in 0..15 and
+             is_integer(angle) and angle in 0..180 do
     if angle > angle_max do
       raise("Angle #{angle} is out of actuation range #{angle_max}")
     else
       with driver_module <- driver.__struct__,
-           duty_cycle <- duty_cycle_from_angle(angle, state),
+           duty_cycle <- duty_cycle_from_angle(angle, Map.take(state, [:angle_max, :duty_cycle_minmax])),
            driver <- apply(driver_module, :set_pwm_duty_cycle, [driver, ch, duty_cycle]) do
         {:ok, %{state | driver: driver}}
       end

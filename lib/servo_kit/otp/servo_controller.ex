@@ -22,6 +22,7 @@ defmodule ServoKit.ServoController do
   @doc """
   Discovers a servo process by servo module name.
   """
+  @spec whereis(atom) :: nil | pid
   def whereis(servo_module) when is_atom(servo_module) do
     case ServoKit.ProcessRegistry.whereis_name({__MODULE__, servo_module}) do
       :undefined -> nil
@@ -32,9 +33,10 @@ defmodule ServoKit.ServoController do
   @doc """
   Starts a servo driver process.
 
-      driver = ServoKit.PCA9685.new()
-      {:ok, pid} = ServoKit.ServoController.start_link(ServoKit.StandardServo, [driver, %{}])
+  driver = ServoKit.PCA9685.new()
+  {:ok, pid} = ServoKit.ServoController.start_link(ServoKit.StandardServo, [driver, %{}])
   """
+  @spec start_link(atom, [map, ...]) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(servo_module, [driver, config])
       when is_atom(servo_module) and is_struct(driver) and is_map(config) do
     servo = apply(servo_module, :new, [driver, config])

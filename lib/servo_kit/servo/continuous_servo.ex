@@ -20,8 +20,8 @@ defmodule ServoKit.ContinuousServo do
   """
   @type t :: %__MODULE__{
           driver: struct(),
-          duty_cycle_mid: float(),
-          duty_cycle_minmax: {float(), float()}
+          duty_cycle_mid: number(),
+          duty_cycle_minmax: {number(), number()}
         }
 
   @typedoc """
@@ -31,8 +31,8 @@ defmodule ServoKit.ContinuousServo do
   - `duty_cycle_mid`: A duty cycle in percent at which the servo stops its movement.
   """
   @type config :: %{
-          optional(:duty_cycle_minmax) => {float, float},
-          optional(:duty_cycle_mid) => float()
+          optional(:duty_cycle_minmax) => {number, number},
+          optional(:duty_cycle_mid) => number()
         }
 
   @impl true
@@ -62,9 +62,11 @@ defmodule ServoKit.ContinuousServo do
       {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, -1.0)  # Full throttle reverse
       {:ok, state} = ServoKit.ContinuousServo.set_throttle(state, 8, 0.0)   # Stop the movement
   """
-  def set_throttle(%{driver: driver} = state, ch, throttle) when ch in 0..15 and throttle >= -1.0 and throttle <= 1.0 do
+  def set_throttle(%{driver: driver} = state, ch, throttle)
+      when is_integer(ch) and ch in 0..15 and
+             is_number(throttle) and throttle >= -1.0 and throttle <= 1.0 do
     with driver_module <- driver.__struct__,
-         duty_cycle <- duty_cycle_from_throttle(throttle, state),
+         duty_cycle <- duty_cycle_from_throttle(throttle, Map.take(state, [:duty_cycle_minmax, :duty_cycle_mid])),
          driver <- apply(driver_module, :set_pwm_duty_cycle, [driver, ch, duty_cycle]) do
       {:ok, %{state | driver: driver}}
     end

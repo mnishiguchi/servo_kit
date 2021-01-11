@@ -7,7 +7,7 @@ defmodule ServoKit.Driver do
   @type driver :: struct()
   @type frequency :: pos_integer()
   @type channel_or_all :: 0..15 | :all
-  @type percent :: float()
+  @type percent :: number()
 
   @doc """
   Initializes the servo driver and returns the initial state.

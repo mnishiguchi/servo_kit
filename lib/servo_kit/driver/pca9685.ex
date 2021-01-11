@@ -125,7 +125,8 @@ defmodule ServoKit.PCA9685 do
 
   @impl true
   def set_pwm_duty_cycle(%{duty_cycles: duty_cycles} = state, ch, percent)
-      when ch in 0..15 and percent >= 0.0 and percent <= 100.0 do
+      when is_integer(ch) and ch in 0..15 and
+             is_number(percent) and percent >= 0.0 and percent <= 100.0 do
     pulse_width = pulse_range_from_percentage(percent)
     Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
     # Keep record in memory and write to the device.
@@ -136,7 +137,7 @@ defmodule ServoKit.PCA9685 do
     e -> {:error, e.message}
   end
 
-  def set_pwm_duty_cycle(state, :all, percent) when percent >= 0.0 and percent <= 100.0 do
+  def set_pwm_duty_cycle(state, :all, percent) when is_number(percent) and percent >= 0.0 and percent <= 100.0 do
     pulse_width = pulse_range_from_percentage(percent)
     Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
     # Keep record in memory and write to the device.

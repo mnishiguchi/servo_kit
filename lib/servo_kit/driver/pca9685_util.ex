@@ -13,8 +13,8 @@ defmodule ServoKit.PCA9685.Util do
       iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(100.0)
       {0, 4095}
   """
-  @spec pulse_range_from_percentage(float()) :: {0, 0..0xFFF}
-  def pulse_range_from_percentage(percent) when percent >= 0.0 and percent <= 100.0 do
+  @spec pulse_range_from_percentage(number()) :: {0, 0..0xFFF}
+  def pulse_range_from_percentage(percent) when is_number(percent) and percent >= 0.0 and percent <= 100.0 do
     {0, round(4095.0 * percent / 100)}
   end
 
@@ -36,8 +36,9 @@ defmodule ServoKit.PCA9685.Util do
       iex> ServoKit.PCA9685.Util.frequency_from_prescale(60, 25_000_000)
       102
   """
-  @spec frequency_from_prescale(integer(), integer()) :: integer()
-  def frequency_from_prescale(prescale, reference_clock_speed) do
+  @spec frequency_from_prescale(pos_integer(), pos_integer()) :: pos_integer()
+  def frequency_from_prescale(prescale, reference_clock_speed)
+      when is_integer(prescale) and is_integer(reference_clock_speed) do
     round(reference_clock_speed / 4096.0 / prescale)
   end
 
@@ -69,7 +70,7 @@ defmodule ServoKit.PCA9685.Util do
       else: raise_frequency_error(freq_hz)
   end
 
-  defp valid_frequency(freq_hz) do
+  defp valid_frequency(freq_hz) when is_integer(freq_hz) do
     if freq_hz in @pca9685_frequency_min..@pca9685_frequency_max,
       do: freq_hz,
       else: raise_frequency_error(freq_hz)
