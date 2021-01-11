@@ -2,7 +2,7 @@ defmodule ServoKit.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/mnishiguchi/servo_kit"
-  @version "0.0.9"
+  @version "0.1.0"
 
   def project do
     [
