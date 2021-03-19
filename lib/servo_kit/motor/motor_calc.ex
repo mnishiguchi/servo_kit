@@ -1,4 +1,4 @@
-defmodule ServoKit.ServoUtil do
+defmodule ServoKit.MotorCalc do
   @moduledoc """
   A collection of pure functions that are used for the servo abstractions.
   """
@@ -8,13 +8,13 @@ defmodule ServoKit.ServoUtil do
   @doc """
   Calculates duty cycle percentage from an angle.
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_angle(0, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
+  iex> MotorCalc.duty_cycle_from_angle(0, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
   2.5
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_angle(90, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
+  iex> MotorCalc.duty_cycle_from_angle(90, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
   7.5
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_angle(180, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
+  iex> MotorCalc.duty_cycle_from_angle(180, %{angle_max: 180, duty_cycle_minmax: {2.5, 12.5}})
   12.5
   """
   @spec duty_cycle_from_angle(angle, %{angle_max: angle, duty_cycle_minmax: {number, number}}) :: float
@@ -33,16 +33,16 @@ defmodule ServoKit.ServoUtil do
   Calculates duty cycle percentage from a throttle value between -1.0 (full speed reverse) and 1.0 (full speed forward) .
   Adjusts the duty cycle range so that the continuous servo is zeroed at `duty_cycle_mid`.
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_throttle(-1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+  iex> MotorCalc.duty_cycle_from_throttle(-1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
   2.5
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_throttle(1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+  iex> MotorCalc.duty_cycle_from_throttle(1.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
   12.5
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
+  iex> MotorCalc.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 7.5})
   7.5
 
-  iex> ServoKit.ServoUtil.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
+  iex> MotorCalc.duty_cycle_from_throttle(0.0, %{duty_cycle_minmax: {2.5, 12.5}, duty_cycle_mid: 8.0})
   8.0
   """
   @spec duty_cycle_from_throttle(number, %{duty_cycle_mid: number, duty_cycle_minmax: {number, number}}) :: float
@@ -66,9 +66,9 @@ defmodule ServoKit.ServoUtil do
   @doc """
   Maps a given value in one range to another range.
 
-      iex> ServoKit.ServoUtil.map_range(25, {0, 100}, {0, 180})
+      iex> MotorCalc.map_range(25, {0, 100}, {0, 180})
       45.0
-      iex> ServoKit.ServoUtil.map_range(50, {0, 100}, {0, 180})
+      iex> MotorCalc.map_range(50, {0, 100}, {0, 180})
       90.0
   """
   @spec map_range(number, {number, number}, {number, number}) :: float

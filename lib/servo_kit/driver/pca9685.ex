@@ -6,10 +6,9 @@ defmodule ServoKit.PCA9685 do
 
   use Bitwise, only_operators: true
   require Logger
-  import ServoKit.PCA9685.Util
-  alias ServoKit.I2C, as: SerialBus
+  import ServoKit.PCA9685Calc
 
-  @behaviour ServoKit.Driver
+  @behaviour ServoKit.DriverContract
 
   @general_call_address 0x00
   @software_reset 0x06
@@ -45,14 +44,14 @@ defmodule ServoKit.PCA9685 do
   # @mode2_invrt 0x10
 
   @default_i2c_bus "i2c-1"
-  @default_pca9685_address 0x40
+  @default_i2c_address 0x40
   # The internal oscillator is 25 MHz. The external clock input, 50 MHz at most.
   @default_reference_clock_speed 25_000_000
   @default_frequency 50
 
   defstruct(
     i2c_ref: nil,
-    pca9685_address: nil,
+    i2c_address: nil,
     reference_clock_speed: nil,
     mode1: 0x11,
     prescale: nil,
@@ -65,7 +64,7 @@ defmodule ServoKit.PCA9685 do
   """
   @type t :: %__MODULE__{
           i2c_ref: reference(),
-          pca9685_address: pos_integer(),
+          i2c_address: pos_integer(),
           reference_clock_speed: pos_integer(),
           mode1: pos_integer(),
           prescale: pos_integer(),
@@ -75,27 +74,31 @@ defmodule ServoKit.PCA9685 do
   @typedoc """
   The configuration options.
   """
-  @type config :: %{
+  @type options :: %{
           optional(:i2c_bus) => String.t(),
-          optional(:pca9685_address) => pos_integer(),
+          optional(:i2c_address) => pos_integer(),
           optional(:reference_clock_speed) => pos_integer(),
           optional(:frequency) => pos_integer()
         }
 
   @impl true
-  @spec new(config()) :: t() | {:error, any()}
-  def new(config \\ %{}) do
-    {:ok, i2c_ref} = SerialBus.open(config[:i2c_bus] || @default_i2c_bus)
-    pca9685_address = config[:pca9685_address] || @default_pca9685_address
-    reference_clock_speed = config[:reference_clock_speed] || @default_reference_clock_speed
-    frequency = config[:frequency] || @default_frequency
+  @spec init(options()) :: {:ok, t()} | {:error, any()}
+  def init(opts \\ %{}) do
+    {:ok, i2c_ref} = ServoKit.Transport.open(opts[:i2c_bus] || @default_i2c_bus)
+    i2c_address = opts[:i2c_address] || @default_i2c_address
+    reference_clock_speed = opts[:reference_clock_speed] || @default_reference_clock_speed
+    frequency = opts[:frequency] || @default_frequency
 
-    __struct__(
-      i2c_ref: i2c_ref,
-      pca9685_address: pca9685_address,
-      reference_clock_speed: reference_clock_speed
-    )
-    |> set_pwm_frequency(frequency)
+    initial_state =
+      __struct__(
+        i2c_ref: i2c_ref,
+        i2c_address: i2c_address,
+        reference_clock_speed: reference_clock_speed
+      )
+
+    with {:ok, state} <- set_pwm_frequency(initial_state, frequency) do
+      {:ok, state}
+    end
   rescue
     e -> {:error, e.message}
   end
@@ -105,20 +108,23 @@ defmodule ServoKit.PCA9685 do
     prescale = prescale_from_frequecy(freq_hz, reference_clock_speed)
     Logger.debug("Set frequency to #{freq_hz}Hz (prescale: #{prescale})")
 
-    state
-    # go to sleep, turn off internal oscillator
-    |> update_mode1([
-      {@mode1_restart, false},
-      {@mode1_sleep, true}
-    ])
-    |> update_prescale(prescale)
-    |> delay(5)
-    # This sets the MODE1 register to turn on auto increment.
-    |> update_mode1([
-      {@mode1_restart, true},
-      {@mode1_sleep, false},
-      {@mode1_auto_increment, true}
-    ])
+    new_state =
+      state
+      # go to sleep, turn off internal oscillator
+      |> update_mode1([
+        {@mode1_restart, false},
+        {@mode1_sleep, true}
+      ])
+      |> update_prescale(prescale)
+      |> delay(5)
+      # This sets the MODE1 register to turn on auto increment.
+      |> update_mode1([
+        {@mode1_restart, true},
+        {@mode1_sleep, false},
+        {@mode1_auto_increment, true}
+      ])
+
+    {:ok, new_state}
   rescue
     e -> {:error, e.message}
   end
@@ -131,8 +137,11 @@ defmodule ServoKit.PCA9685 do
     Logger.debug("Set duty cycle to #{percent}% #{inspect(pulse_width)} for channel #{ch}")
     # Keep record in memory and write to the device.
 
-    %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
-    |> write_pulse_range(ch, pulse_width)
+    new_state =
+      %{state | duty_cycles: List.replace_at(duty_cycles, ch, percent)}
+      |> write_pulse_range(ch, pulse_width)
+
+    {:ok, new_state}
   rescue
     e -> {:error, e.message}
   end
@@ -142,8 +151,11 @@ defmodule ServoKit.PCA9685 do
     Logger.debug("Duty cycle #{percent}% #{inspect(pulse_width)} for all channels")
     # Keep record in memory and write to the device.
 
-    %{state | duty_cycles: List.duplicate(percent, 16)}
-    |> write_pulse_range(:all, pulse_width)
+    new_state =
+      %{state | duty_cycles: List.duplicate(percent, 16)}
+      |> write_pulse_range(:all, pulse_width)
+
+    {:ok, new_state}
   rescue
     e -> {:error, e.message}
   end
@@ -155,7 +167,7 @@ defmodule ServoKit.PCA9685 do
       ServoKit.PCA9685.reset(state)
   """
   def reset(%{i2c_ref: i2c_ref} = state) do
-    :ok = SerialBus.write(i2c_ref, @general_call_address, <<@software_reset>>)
+    :ok = ServoKit.Transport.write(i2c_ref, @general_call_address, <<@software_reset>>)
     state
   rescue
     e -> {:error, e.message}
@@ -167,7 +179,10 @@ defmodule ServoKit.PCA9685 do
       ServoKit.PCA9685.sleep(state)
   """
   def sleep(state) do
-    state |> assign_mode1(@mode1_sleep, true) |> write_mode1() |> delay(5)
+    state
+    |> assign_mode1(@mode1_sleep, true)
+    |> write_mode1()
+    |> delay(5)
   rescue
     e -> {:error, e.message}
   end
@@ -178,7 +193,9 @@ defmodule ServoKit.PCA9685 do
       ServoKit.PCA9685.wake_up(state)
   """
   def wake_up(state) do
-    state |> assign_mode1(@mode1_sleep, false) |> write_mode1()
+    state
+    |> assign_mode1(@mode1_sleep, false)
+    |> write_mode1()
   rescue
     e -> {:error, e.message}
   end
@@ -195,7 +212,9 @@ defmodule ServoKit.PCA9685 do
   # end
 
   defp update_prescale(state, prescale) do
-    state |> assign_prescale(prescale) |> write_prescale()
+    state
+    |> assign_prescale(prescale)
+    |> write_prescale()
   end
 
   ##
@@ -253,10 +272,10 @@ defmodule ServoKit.PCA9685 do
 
   # Writes data to the device.
   defp i2c_write(state, register, data) when register in 0..255 and data in 0..255 do
-    %{i2c_ref: i2c_ref, pca9685_address: pca9685_address} = state
+    %{i2c_ref: i2c_ref, i2c_address: i2c_address} = state
     # hex = fn val -> inspect(val, base: :hex) end
-    # Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(pca9685_address)}")
-    :ok = SerialBus.write(i2c_ref, pca9685_address, <<register, data>>)
+    # Logger.debug("Wrote #{hex.(data)} to register #{hex.(register)} at address #{hex.(i2c_address)}")
+    :ok = ServoKit.Transport.write(i2c_ref, i2c_address, <<register, data>>)
     state
   end
 

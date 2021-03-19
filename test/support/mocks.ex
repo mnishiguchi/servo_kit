@@ -1,4 +1,4 @@
 # https://hexdocs.pm/mox/Mox.html#module-compile-time-requirements
-Mox.defmock(ServoKit.MockI2C, for: ServoKit.I2C.Behaviour)
-Mox.defmock(ServoKit.MockDriver, for: ServoKit.Driver)
-Mox.defmock(ServoKit.MockServo, for: ServoKit.Servo)
+Mox.defmock(ServoKit.MockTransport, for: ServoKit.TransportContract)
+Mox.defmock(ServoKit.MockDriver, for: ServoKit.DriverContract)
+Mox.defmock(ServoKit.MockMotor, for: ServoKit.MotorContract)

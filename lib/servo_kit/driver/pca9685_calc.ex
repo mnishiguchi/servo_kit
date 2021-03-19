@@ -1,4 +1,4 @@
-defmodule ServoKit.PCA9685.Util do
+defmodule ServoKit.PCA9685Calc do
   @moduledoc """
   A collection of functions that are used for the PCA9685 driver.
   """
@@ -6,11 +6,11 @@ defmodule ServoKit.PCA9685.Util do
   @doc """
   Calculates 12-bit pulse range from a percentage value.
 
-      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(0.0)
+      iex> PCA9685Calc.pulse_range_from_percentage(0.0)
       {0, 0}
-      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(50.0)
+      iex> PCA9685Calc.pulse_range_from_percentage(50.0)
       {0, 2048}
-      iex> ServoKit.PCA9685.Util.pulse_range_from_percentage(100.0)
+      iex> PCA9685Calc.pulse_range_from_percentage(100.0)
       {0, 4095}
   """
   @spec pulse_range_from_percentage(number()) :: {0, 0..0xFFF}
@@ -29,11 +29,11 @@ defmodule ServoKit.PCA9685.Util do
   @doc """
   Calculates the PWM frequency in Hz based on specified prescale value and reference clock speed.
 
-      iex> ServoKit.PCA9685.Util.frequency_from_prescale(255, 25_000_000)
+      iex> PCA9685Calc.frequency_from_prescale(255, 25_000_000)
       24
-      iex> ServoKit.PCA9685.Util.frequency_from_prescale(121, 25_000_000)
+      iex> PCA9685Calc.frequency_from_prescale(121, 25_000_000)
       50
-      iex> ServoKit.PCA9685.Util.frequency_from_prescale(60, 25_000_000)
+      iex> PCA9685Calc.frequency_from_prescale(60, 25_000_000)
       102
   """
   @spec frequency_from_prescale(pos_integer(), pos_integer()) :: pos_integer()
@@ -50,13 +50,13 @@ defmodule ServoKit.PCA9685.Util do
   prescale_value = round(osc_value / (4096 * update_rate)) - 1
   ```
 
-      iex> ServoKit.PCA9685.Util.prescale_from_frequecy(24, 25_000_000)
+      iex> PCA9685Calc.prescale_from_frequecy(24, 25_000_000)
       253
-      iex> ServoKit.PCA9685.Util.prescale_from_frequecy(50, 25_000_000)
+      iex> PCA9685Calc.prescale_from_frequecy(50, 25_000_000)
       121
-      iex> ServoKit.PCA9685.Util.prescale_from_frequecy(100, 25_000_000)
+      iex> PCA9685Calc.prescale_from_frequecy(100, 25_000_000)
       60
-      iex> ServoKit.PCA9685.Util.prescale_from_frequecy(1526, 25_000_000)
+      iex> PCA9685Calc.prescale_from_frequecy(1526, 25_000_000)
       3
   """
   @spec prescale_from_frequecy(24..1526, integer()) :: 3..255

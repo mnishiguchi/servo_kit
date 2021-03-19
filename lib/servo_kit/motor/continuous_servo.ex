@@ -3,9 +3,9 @@ defmodule ServoKit.ContinuousServo do
   The abstraction of the continuous servo.
   """
 
-  import ServoKit.ServoUtil
+  import ServoKit.MotorCalc
 
-  @behaviour ServoKit.Servo
+  @behaviour ServoKit.MotorContract
 
   @default_duty_cycle_minmax {2.5, 12.5}
 
@@ -30,21 +30,24 @@ defmodule ServoKit.ContinuousServo do
   - `duty_cycle_minmax`: A tuple of duty cycle min and max in percent.
   - `duty_cycle_mid`: A duty cycle in percent at which the servo stops its movement.
   """
-  @type config :: %{
+  @type options :: %{
           optional(:duty_cycle_minmax) => {number, number},
           optional(:duty_cycle_mid) => number()
         }
 
   @impl true
-  @spec new(struct(), config()) :: t() | {:error, any()}
-  def new(driver, config \\ %{}) when is_struct(driver) and is_map(config) do
-    duty_cycle_minmax = config[:duty_cycle_minmax] || @default_duty_cycle_minmax
+  @spec init(struct(), options()) :: {:ok, t()} | {:error, any()}
+  def init(driver, opts \\ %{}) when is_struct(driver) and is_map(opts) do
+    duty_cycle_minmax = opts[:duty_cycle_minmax] || @default_duty_cycle_minmax
 
-    __struct__(
-      driver: driver,
-      duty_cycle_minmax: duty_cycle_minmax,
-      duty_cycle_mid: config[:duty_cycle_mid] || calculate_mid_value(duty_cycle_minmax)
-    )
+    motor =
+      __struct__(
+        driver: driver,
+        duty_cycle_minmax: duty_cycle_minmax,
+        duty_cycle_mid: opts[:duty_cycle_mid] || calculate_mid_value(duty_cycle_minmax)
+      )
+
+    {:ok, motor}
   rescue
     e -> {:error, e.message}
   end
@@ -52,7 +55,7 @@ defmodule ServoKit.ContinuousServo do
   defp calculate_mid_value({min, max}), do: (min + max) / 2
 
   @impl true
-  def call(state, {:set_throttle, [channel, value]}), do: set_throttle(state, channel, value)
+  def call(state, {:set_throttle, channel, value}), do: set_throttle(state, channel, value)
   def call(_display, command), do: {:error, "Unsupported command: #{inspect(command)}"}
 
   @doc """
