@@ -1,140 +1,85 @@
 defmodule ServoKit do
   @moduledoc """
-  A collection of convenience functions to use this library.
+  Use PCA9685 PWM/Servo Controller in Elixir
   """
 
-  @doc """
-  Initializes a standard servo. For options, see `ServoKit.StandardServo` documentation.
+  use GenServer
 
-      pid = ServoKit.init_standard_servo()
-  """
-  def init_standard_servo(servo_options \\ %{}) do
-    _pid =
-      ServoKit.init_servo_controller(
-        driver_module: ServoKit.PCA9685,
-        driver_options: %{},
-        servo_module: ServoKit.StandardServo,
-        servo_options: servo_options
-      )
+  @type options() :: [name: GenServer.name()] | ServoKit.PCA9685.options()
+
+  @type state :: ServoKit.PCA9685.t()
+
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
+  end
+
+  def set_pwm_frequency(pid \\ __MODULE__, freq_hz) do
+    GenServer.call(pid, {:set_pwm_frequency, freq_hz})
+  end
+
+  def set_pwm_duty_cycle(pid \\ __MODULE__, duty_cycle, ch: ch) do
+    GenServer.call(pid, {:set_pwm_duty_cycle, duty_cycle, ch: ch})
+  end
+
+  @impl true
+  def init(opts) do
+    driver_options = Keyword.take(opts, [:bus_name, :address, :reference_clock_speed, :frequency])
+    ServoKit.PCA9685.init(driver_options)
+  end
+
+  @impl true
+  def handle_call({:set_pwm_frequency, freq_hz}, _from, state) do
+    case result = ServoKit.PCA9685.set_pwm_frequency(state, freq_hz) do
+      {:ok, new_state} ->
+        {:reply, result, new_state}
+
+      {:error, _} ->
+        {:reply, result, state}
+    end
+  end
+
+  def handle_call({:set_pwm_duty_cycle, duty_cycle, ch: ch}, _from, state) do
+    case result = ServoKit.PCA9685.set_pwm_duty_cycle(state, duty_cycle, ch: ch) do
+      {:ok, new_state} ->
+        {:reply, result, new_state}
+
+      {:error, _} ->
+        {:reply, result, state}
+    end
   end
 
   @doc """
-  Initializes a continuous servo. For options, see `ServoKit.ContinuousServo` documentation.
+  Maps a given value in one range to another range.
 
-      pid = ServoKit.init_continuous_servo()
+  ## Examples
+
+      iex> ServoKit.map(0, {0, 180}, {2.5, 12.5})
+      2.5
+
+      iex> ServoKit.map(45, {0, 180}, {2.5, 12.5})
+      5.0
+
+      iex> ServoKit.map(90, {0, 180}, {2.5, 12.5})
+      7.5
+
+      iex> ServoKit.map(180, {0, 180}, {2.5, 12.5})
+      12.5
+
+      iex> ServoKit.map(0, {-1.0, 1.0}, {2.5, 12.5})
+      7.5
+
+      iex> ServoKit.map(-1, {-1.0, 1.0}, {2.5, 12.5})
+      2.5
+
+      iex> ServoKit.map(1, {-1.0, 1.0}, {2.5, 12.5})
+      12.5
+
   """
-  def init_continuous_servo(servo_options \\ %{}) do
-    _pid =
-      ServoKit.init_servo_controller(
-        driver_module: ServoKit.PCA9685,
-        driver_options: %{},
-        servo_module: ServoKit.ContinuousServo,
-        servo_options: servo_options
-      )
-  end
-
-  @doc """
-  Initializes a `ServoController`.
-
-      pid = ServoKit.init_servo_controller(
-        driver_module: ServoKit.PCA9685,
-        driver_options: %{},
-        servo_module: ServoKit.StandardServo,
-        servo_options: %{}
-      )
-  """
-  def init_servo_controller([driver_module: _, driver_options: _, servo_module: _, servo_options: _] = args) do
-    _pid = ServoKit.ServoSupervisor.servo_controller(args)
-  end
-
-  ##
-  ## Servo commands
-  ##
-
-  @doc """
-  Change the angle for a starndard servo.
-
-      # Set the angle to 90 degrees for Channel 0.
-      ServoKit.set_angle(pid, 0, 90)
-  """
-  def set_angle(pid, channel, angle) when is_pid(pid) and channel in 0..15 and is_integer(angle) do
-    ServoKit.ServoController.run_command(pid, {:set_angle, [channel, angle]})
-  end
-
-  @doc """
-  Change the throttle for a continuous servo.
-
-      # Set the throttle to full speed reverse for Channel 8.
-      ServoKit.set_throttle(pid, 8, -1)
-  """
-  def set_throttle(pid, channel, throttle)
-      when is_pid(pid) and channel in 0..15 and throttle >= -1.0 and throttle <= 1.0 do
-    ServoKit.ServoController.run_command(pid, {:set_throttle, [channel, throttle]})
-  end
-
-  ##
-  ## DEMO programs
-  ##
-
-  @doc """
-  Runs a quick-test program for the LED brightness.
-
-      ServoKit.hello_led(15)
-  """
-  def hello_led(channel) do
-    driver = %{i2c_bus: "i2c-1", frequency: 50} |> ServoKit.PCA9685.new()
-    increments = 1..10 |> Enum.to_list() |> Enum.map(&(&1 * 10))
-    decrements = 9..0 |> Enum.to_list() |> Enum.map(&(&1 * 10))
-
-    (increments ++ decrements)
-    |> Enum.each(fn duty_cycle ->
-      ServoKit.PCA9685.set_pwm_duty_cycle(driver, channel, duty_cycle)
-      Process.sleep(222)
-    end)
-  end
-
-  @doc """
-  Runs a quick-test program for the Standard Servo.
-
-      ServoKit.hello_standard_servo(0)
-  """
-  def hello_standard_servo(channel) do
-    pid =
-      init_servo_controller(
-        driver_module: ServoKit.PCA9685,
-        driver_options: %{},
-        servo_module: ServoKit.StandardServo,
-        servo_options: %{}
-      )
-
-    set_angle(pid, 0, 180)
-    Process.sleep(1234)
-
-    [0, 45, 90, 135, 180, 135, 90, 45, 0]
-    |> Enum.each(fn deg ->
-      set_angle(pid, channel, deg)
-      Process.sleep(555)
-    end)
-  end
-
-  @doc """
-  Runs a quick-test program for the Continuous Servo.
-
-      ServoKit.hello_continuous_servo(8)
-  """
-  def hello_continuous_servo(channel) do
-    pid =
-      init_servo_controller(
-        driver_module: ServoKit.PCA9685,
-        driver_options: %{},
-        servo_module: ServoKit.ContinuousServo,
-        servo_options: %{}
-      )
-
-    [-1, 0, 1, 0]
-    |> Enum.each(fn throttle ->
-      set_throttle(pid, channel, throttle)
-      Process.sleep(2000)
-    end)
+  @spec map(number, {number, number}, {number, number}) :: float
+  def map(x, {in_min, in_max}, {out_min, out_max})
+      when is_number(x) and
+             is_number(in_min) and is_number(in_max) and in_min < in_max and
+             is_number(out_min) and is_number(out_max) and out_min < out_max do
+    (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
   end
 end

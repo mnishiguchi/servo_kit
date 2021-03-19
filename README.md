@@ -4,7 +4,7 @@
 [![API docs](https://img.shields.io/hexpm/v/servo_kit.svg?label=docs)](https://hexdocs.pm/servo_kit)
 ![CI](https://github.com/mnishiguchi/pca9685/workflows/CI/badge.svg)
 
-Drive PCA9685 PWM/Servo Controller using Elixir
+Use PCA9685 PWM/Servo Controller in Elixir
 
 ## Installation
 
@@ -20,42 +20,54 @@ end
 
 ## Examples
 
-### Dimming an LED
+### Basic usage
 
 ```elixir
-# Initialize a driver.
-driver = ServoKit.PCA9685.new(%{i2c_bus: "i2c-1", frequency: 50})
+{:ok, _pid} = ServoKit.start_link()
 
-# Set the duty cycle to 66.6% for Channel 15.
-ServoKit.PCA9685.set_pwm_duty_cycle(driver, 15, 66.6)
+# Set the duty cycle to 7.5% for Channel 0
+ServoKit.set_pwm_duty_cycle(7.5, ch: 0)
 ```
+
 ### Controling a standard servo
 
 ```elixir
-# Initialize a standard servo controller.
-pid = ServoKit.init_standard_servo(%{duty_cycle_minmax: {2.5, 12.5}, angle_max: 180})
+ServoKit.start_link()
 
-# Set the angle to 180 degrees for Channel 0.
-ServoKit.set_angle(pid, 0, 180)
+# Define the mapping between the angle in degrees and duty cycle in percentage
+angle_range = {0, 180}
+duty_cycle_range = {2.5, 12.5}
+
+# Set the angle to 0 degree for channel 0
+0 |> ServoKit.map(angle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
+
+# Set the angle to 90 degree for channel 0
+90 |> ServoKit.map(angle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
+
+# Set the angle to 180 degree for channel 0
+180 |> ServoKit.map(angle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
 ```
 
 ### Controling a continuous servo
 
 ```elixir
-# Initialize a continuous servo controller.
-pid = ServoKit.init_continuous_servo(%{duty_cycle_minmax: {2.5, 12.5}})
+ServoKit.start_link()
 
-# Throttle full forward for Channel 8.
-ServoKit.set_throttle(pid, 8, 1)
+# Define the mapping between the throttle -1..1 and duty cycle in percentage
+throttle_range = {-1.0, 1.0}
+duty_cycle_range = {2.5, 12.5}
 
-# Throttle full reverse for Channel 8.
-ServoKit.set_throttle(pid, 8, -1)
+# Stop the actuator for channel 0
+0 |> ServoKit.map(throttle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
 
-# Stop the movement for Channel 8.
-ServoKit.set_throttle(pid, 8, 0)
+# Throttle full speed forward for channel 0
+1.0 |> ServoKit.map(throttle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
+
+# Throttle full speed reverse for channel 0
+-1.0 |> ServoKit.map(throttle_range, duty_cycle_range) |> ServoKit.set_pwm_duty_cycle(ch: 0)
 ```
 
 ## Links
 
 - [PCA9685 Overview](https://www.nxp.com/products/power-management/lighting-driver-and-controller-ics/ic-led-controllers/16-channel-12-bit-pwm-fm-plus-ic-bus-led-controller:PCA9685)
-- [PCA9685 Datasheet](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf)
+- [PCA9685 Data Sheet](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf)
