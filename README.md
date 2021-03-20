@@ -6,18 +6,6 @@
 
 Use PCA9685 PWM/Servo Controller in Elixir
 
-## Installation
-
-You can install this library by adding `servo_kit` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:servo_kit, "~> 0.1.0"}
-  ]
-end
-```
-
 ## Examples
 
 ### Basic usage
