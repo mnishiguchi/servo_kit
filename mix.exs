@@ -2,7 +2,7 @@ defmodule ServoKit.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/mnishiguchi/servo_kit"
-  @version "0.1.0"
+  @version "0.2.0"
 
   def project do
     [
@@ -12,7 +12,7 @@ defmodule ServoKit.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       build_embedded: Mix.env() == :prod,
-      description: "Drive PCA9685 PWM/Servo Controller using Elixir",
+      description: "Use PCA9685 PWM/Servo Controller in Elixir",
       deps: deps(),
       docs: docs(),
       package: package(),
