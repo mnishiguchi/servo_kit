@@ -21,17 +21,16 @@ defmodule ServoKit.Transport do
 
   @impl true
   def open(bus_name) do
-    apply(i2c_module(), :open, [bus_name])
+    apply(delegate_module(), :open, [bus_name])
   end
 
   @impl true
   def write(i2c_bus, i2c_address, data) do
-    apply(i2c_module(), :write, [i2c_bus, i2c_address, data])
+    apply(delegate_module(), :write, [i2c_bus, i2c_address, data])
   end
 
-  defp i2c_module() do
-    # https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-compile-time-application-configuration
-    Application.get_env(:servo_kit, :i2c_module, Circuits.I2C)
+  defp delegate_module() do
+    Application.get_env(:servo_kit, :transport, Circuits.I2C)
   end
 end
 

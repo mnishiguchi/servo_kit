@@ -6,15 +6,16 @@ defmodule ServoKit.PCA9685Calc do
   @doc """
   Calculates 12-bit pulse range from a percentage value.
 
-      iex> PCA9685Calc.pulse_range_from_percentage(0.0)
+      iex> pulse_range_from_percentage(0.0)
       {0, 0}
-      iex> PCA9685Calc.pulse_range_from_percentage(50.0)
+      iex> pulse_range_from_percentage(50.0)
       {0, 2048}
-      iex> PCA9685Calc.pulse_range_from_percentage(100.0)
+      iex> pulse_range_from_percentage(100.0)
       {0, 4095}
   """
   @spec pulse_range_from_percentage(number()) :: {0, 0..0xFFF}
-  def pulse_range_from_percentage(percent) when is_number(percent) and percent >= 0.0 and percent <= 100.0 do
+  def pulse_range_from_percentage(percent)
+      when is_number(percent) and percent >= 0.0 and percent <= 100.0 do
     {0, round(4095.0 * percent / 100)}
   end
 
@@ -29,11 +30,11 @@ defmodule ServoKit.PCA9685Calc do
   @doc """
   Calculates the PWM frequency in Hz based on specified prescale value and reference clock speed.
 
-      iex> PCA9685Calc.frequency_from_prescale(255, 25_000_000)
+      iex> frequency_from_prescale(255, 25_000_000)
       24
-      iex> PCA9685Calc.frequency_from_prescale(121, 25_000_000)
+      iex> frequency_from_prescale(121, 25_000_000)
       50
-      iex> PCA9685Calc.frequency_from_prescale(60, 25_000_000)
+      iex> frequency_from_prescale(60, 25_000_000)
       102
   """
   @spec frequency_from_prescale(pos_integer(), pos_integer()) :: pos_integer()
@@ -43,21 +44,23 @@ defmodule ServoKit.PCA9685Calc do
   end
 
   @doc """
-  Calculates the PWM frequency prescale based on the formula in [Datasheet 7.3.5](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).
+  Calculates the PWM frequency prescale based on the formula in
+  [Datasheet 7.3.5](https://cdn-shop.adafruit.com/datasheets/PCA9685.pdf).
 
   ```
   # Formula
   prescale_value = round(osc_value / (4096 * update_rate)) - 1
   ```
 
-      iex> PCA9685Calc.prescale_from_frequecy(24, 25_000_000)
+      iex> prescale_from_frequecy(24, 25_000_000)
       253
-      iex> PCA9685Calc.prescale_from_frequecy(50, 25_000_000)
+      iex> prescale_from_frequecy(50, 25_000_000)
       121
-      iex> PCA9685Calc.prescale_from_frequecy(100, 25_000_000)
+      iex> prescale_from_frequecy(100, 25_000_000)
       60
-      iex> PCA9685Calc.prescale_from_frequecy(1526, 25_000_000)
+      iex> prescale_from_frequecy(1526, 25_000_000)
       3
+
   """
   @spec prescale_from_frequecy(24..1526, integer()) :: 3..255
   def prescale_from_frequecy(freq_hz, reference_clock_speed)

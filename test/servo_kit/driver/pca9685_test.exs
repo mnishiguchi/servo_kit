@@ -14,10 +14,16 @@ defmodule ServoKit.PCA9685Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  describe "start" do
+  describe "init" do
     test "no config" do
-      assert {:ok, %PCA9685{i2c_ref: _ref, mode1: 0xA1, i2c_address: 0x40, prescale: 121, duty_cycles: _}} =
-               PCA9685.init()
+      assert {:ok,
+              %PCA9685{
+                i2c_ref: _ref,
+                mode1: 0xA1,
+                i2c_address: 0x40,
+                prescale: 121,
+                duty_cycles: _
+              }} = PCA9685.init()
     end
 
     test "blank config" do
@@ -31,17 +37,17 @@ defmodule ServoKit.PCA9685Test do
 
   test "reset" do
     state = fake_driver()
-    assert %PCA9685{} = PCA9685.reset(state)
+    assert {:ok, %PCA9685{}} = PCA9685.reset(state)
   end
 
   test "sleep" do
     state = fake_driver()
-    assert %PCA9685{mode1: 0xB1} = PCA9685.sleep(state)
+    assert {:ok, %PCA9685{mode1: 0xB1}} = PCA9685.sleep(state)
   end
 
   test "wake_up" do
     state = fake_driver()
-    assert %PCA9685{mode1: 0xA1} = PCA9685.wake_up(state)
+    assert {:ok, %PCA9685{mode1: 0xA1}} = PCA9685.wake_up(state)
   end
 
   describe "set_pwm_frequency" do
@@ -55,50 +61,17 @@ defmodule ServoKit.PCA9685Test do
   describe "set_pwm_duty_cycle" do
     test "one channel" do
       state = fake_driver()
-      {:ok, state} = PCA9685.set_pwm_duty_cycle(state, 1, 60.0)
+      {:ok, state} = PCA9685.set_pwm_duty_cycle(state, 7.5, ch: 1)
 
-      assert [
-               0,
-               60.0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0,
-               0
-             ] == state.duty_cycles
+      assert {0, 7.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} == state.duty_cycles
     end
 
     test "all channels" do
       state = fake_driver()
-      {:ok, state} = PCA9685.set_pwm_duty_cycle(state, :all, 60.0)
+      {:ok, state} = PCA9685.set_pwm_duty_cycle(state, 7.5, ch: :all)
 
-      assert [
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0,
-               60.0
-             ] == state.duty_cycles
+      assert {7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5} ==
+               state.duty_cycles
     end
   end
 

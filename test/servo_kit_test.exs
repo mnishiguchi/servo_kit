@@ -1,4 +1,4 @@
-defmodule ServoKitTest do
+defmodule ServoKit.Test do
   use ExUnit.Case
 
   # https://hexdocs.pm/mox/Mox.html
@@ -15,21 +15,21 @@ defmodule ServoKitTest do
     :ok
   end
 
-  test "start_link" do
-    # Passing no options
-    assert {:ok, pid} = ServoKit.start_link()
+  describe "start_link" do
+    test "passing no options" do
+      assert {:ok, _pid} = ServoKit.start_link()
+      assert {:error, {:already_started, _pid}} = ServoKit.start_link()
+    end
 
-    # Passing some options
-    assert {:ok, pid} =
-             ServoKit.start_link(
-               name: :test_server,
-               motor_module: ServoKit.StandardServo,
-               motor_options: %{},
-               driver_options: %{}
-             )
-
-    # Run a motor command
-    assert {:error, "Unsupported command: :hello"} == ServoKit.execute(pid, :hello)
-    assert {:error, "Unsupported command: :world"} == ServoKit.execute(:test_server, :world)
+    test "passing some options" do
+      assert {:ok, _pid} =
+               ServoKit.start_link(
+                 name: :test_server,
+                 bus_name: "i2c-1",
+                 address: 0x40,
+                 reference_clock_speed: 25_000_000,
+                 frequency: 50
+               )
+    end
   end
 end

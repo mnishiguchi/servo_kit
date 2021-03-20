@@ -2,68 +2,47 @@ defmodule ServoKit do
   @moduledoc false
 
   use GenServer
-  require Logger
 
-  @type options() :: [
-          motor_module: ServoKit.StandardServo | ServoKit.ContinuousServo,
-          motor_options: ServoKit.StandardServo.options() | ServoKit.ContinuousServo.options(),
-          name: GenServer.name(),
-          bus_name: ServoKit.Transport.bus_name(),
-          bus_address: ServoKit.Transport.address()
-        ]
+  @type options() :: [name: GenServer.name()] | ServoKit.PCA9685.options()
 
-  @doc """
-  Starts a servo worker process.
+  @type state :: ServoKit.PCA9685.t()
 
-  ## Examples
-
-      # Passing no options
-      assert {:ok, pid} = ServoKit.start_link()
-
-      # Passing some options
-      assert {:ok, pid} =
-              ServoKit.start_link(
-                name: :test_server,
-                motor_module: ServoKit.StandardServo,
-                motor_options: %{},
-                driver_options: %{}
-              )
-
-  """
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
   end
 
-  @doc """
-  Delegates the specified operation to the servo driver, and updates the servo state as needed.
+  def set_pwm_frequency(pid \\ __MODULE__, freq_hz) do
+    GenServer.call(pid, {:set_pwm_frequency, freq_hz})
+  end
 
-  ## Examples
-
-      ServoKit.execute(pid, {:set_pwm_duty_cycle, 0, 7.5})
-
-  """
-  def execute(pid, command), do: GenServer.call(pid, command)
+  def set_pwm_duty_cycle(pid \\ __MODULE__, duty_cycle, ch: ch) do
+    GenServer.call(pid, {:set_pwm_duty_cycle, duty_cycle, ch: ch})
+  end
 
   @impl true
   def init(opts) do
-    motor_module = opts[:motor_module] || ServoKit.StandardServo
-    motor_options = opts[:motor_options] || %{}
-    driver_options = opts[:driver_options] || %{}
-
-    {:ok, driver} = ServoKit.PCA9685.init(driver_options)
-    {:ok, _motor} = apply(motor_module, :init, [driver, motor_options])
+    driver_options = Keyword.take(opts, [:bus_name, :address, :reference_clock_speed, :frequency])
+    ServoKit.PCA9685.init(driver_options)
   end
 
   @impl true
-  def handle_call(command, _from, motor) do
-    case result = run_motor_command(motor, command) do
-      {:ok, updated_motor} -> {:reply, result, updated_motor}
-      {:error, _} -> {:reply, result, motor}
+  def handle_call({:set_pwm_frequency, freq_hz}, _from, state) do
+    case result = ServoKit.PCA9685.set_pwm_frequency(state, freq_hz) do
+      {:ok, new_state} ->
+        {:reply, result, new_state}
+
+      {:error, _} ->
+        {:reply, result, state}
     end
   end
 
-  # Delegates the motor operation to one of the motor modules.
-  defp run_motor_command(motor, command) do
-    apply(motor.__struct__, :call, [motor, command])
+  def handle_call({:set_pwm_duty_cycle, duty_cycle, ch: ch}, _from, state) do
+    case result = ServoKit.PCA9685.set_pwm_duty_cycle(state, duty_cycle, ch: ch) do
+      {:ok, new_state} ->
+        {:reply, result, new_state}
+
+      {:error, _} ->
+        {:reply, result, state}
+    end
   end
 end
