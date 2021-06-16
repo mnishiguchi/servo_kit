@@ -9,7 +9,7 @@ defmodule ServoKit.PCA9685Test do
   alias ServoKit.PCA9685
 
   setup do
-    Mox.stub_with(ServoKit.MockTransport, ServoKit.TransportStub)
+    Mox.stub_with(ServoKit.MockTransport, ServoKit.I2CStub)
     :ok
   end
 

@@ -72,8 +72,8 @@ defmodule ServoKit.PCA9685 do
   @type channel :: 0..15 | :all
 
   @type t :: %__MODULE__{
-          i2c_ref: ServoKit.Transport.bus(),
-          i2c_address: ServoKit.Transport.address(),
+          i2c_ref: ServoKit.I2C.bus(),
+          i2c_address: ServoKit.I2C.address(),
           reference_clock_speed: pos_integer(),
           mode1: pos_integer(),
           prescale: pos_integer(),
@@ -81,8 +81,8 @@ defmodule ServoKit.PCA9685 do
         }
 
   @type options :: [
-          bus_name: ServoKit.Transport.bus_name(),
-          address: ServoKit.Transport.address(),
+          bus_name: ServoKit.I2C.bus_name(),
+          address: ServoKit.I2C.address(),
           reference_clock_speed: pos_integer(),
           frequency: frequency()
         ]
@@ -92,7 +92,7 @@ defmodule ServoKit.PCA9685 do
   """
   @spec init(options()) :: {:ok, t()} | {:error, any()}
   def init(opts \\ []) do
-    {:ok, i2c_ref} = ServoKit.Transport.open(opts[:bus_name] || @default_bus_name)
+    {:ok, i2c_ref} = ServoKit.I2C.open(opts[:bus_name] || @default_bus_name)
     i2c_address = opts[:address] || @default_address
     reference_clock_speed = opts[:reference_clock_speed] || @default_reference_clock_speed
     frequency = opts[:frequency] || @default_frequency
@@ -195,7 +195,7 @@ defmodule ServoKit.PCA9685 do
   See PCA9685 data sheet 7.1.4 and 7.6.
   """
   def reset(%{i2c_ref: i2c_ref} = state) do
-    :ok = ServoKit.Transport.write(i2c_ref, @general_call_address, <<@reg_reset>>)
+    :ok = ServoKit.I2C.write(i2c_ref, @general_call_address, <<@reg_reset>>)
     :timer.sleep(10)
     {:ok, state}
   rescue
@@ -308,7 +308,7 @@ defmodule ServoKit.PCA9685 do
 
   # Writes data to the PCA9685 device.
   defp i2c_write(%{i2c_ref: i2c_ref, i2c_address: i2c_address} = state, register, data) do
-    :ok = ServoKit.Transport.write(i2c_ref, i2c_address, <<register, data>>)
+    :ok = ServoKit.I2C.write(i2c_ref, i2c_address, <<register, data>>)
     state
   end
 
