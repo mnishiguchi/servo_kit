@@ -104,9 +104,7 @@ defmodule ServoKit.PCA9685 do
         reference_clock_speed: reference_clock_speed
       )
 
-    with {:ok, state} <- reset(initial_state),
-         {:ok, state} <- set_pwm_frequency(state, frequency),
-         do: {:ok, state}
+    set_pwm_frequency(initial_state, frequency)
   rescue
     e -> {:error, e.message}
   end
